@@ -21,4 +21,8 @@ public class TCPSender {
 		dout.flush();
 	}
 	
+	public void close() throws IOException {
+		dout.close();
+		socket.close();
+	}
 }
