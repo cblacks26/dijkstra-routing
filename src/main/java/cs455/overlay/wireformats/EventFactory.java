@@ -13,14 +13,20 @@ public class EventFactory{
 		int type = dis.readInt();
 		Event event = null;
 		if(type == 1) {
-			event = new Message(bytes);
-		}else if(type == 2) {
 			event = new Register(bytes);
-		}else if (type == 3) {
-			event = new Deregister(bytes);
+		}else if (type == 2) {
+			event = new RegisterResponse(bytes);
+		}else if (type == 3){
+			
+		}else if (type == 4) {
+			
+		}else if (type == 5) {
+			
 		}else {
 			throw new Exception("Unrecognized Message Type");
 		}
+		dis.close();
+		bais.close();
 		return event;
 	}
 	

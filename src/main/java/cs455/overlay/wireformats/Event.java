@@ -1,19 +1,35 @@
 package cs455.overlay.wireformats;
 
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
+import java.io.IOException;
+
 public abstract class Event {
 
 	private byte[] data;
+	protected ByteArrayInputStream bais;
+	protected DataInputStream dis;
+	private int type;
 	
-	public Event(byte[] data) {
+	public Event(byte[] data) throws IOException {
 		this.data = data;
+		this.bais = new ByteArrayInputStream(data);
+		this.dis = new DataInputStream(new BufferedInputStream(bais));
+		this.type = dis.readInt();
 	}
 	
 	public byte[] getBytes() {
 		return data;
 	}
 	
-	public String getType() {
-		return "UNKNOWN";
+	public int getType() {
+		return type;
+	}
+	
+	public void close() throws IOException {
+		dis.close();
+		bais.close();
 	}
 	
 }

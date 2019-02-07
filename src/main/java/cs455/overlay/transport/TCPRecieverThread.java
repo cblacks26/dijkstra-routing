@@ -10,10 +10,13 @@ import cs455.overlay.wireformats.EventFactory;
 
 public class TCPRecieverThread implements Runnable{
 
+	private TCPConnection conn;
 	private Socket socket;
 	private DataInputStream din;
+	private volatile boolean isDone;
 	
-	public TCPRecieverThread(Socket socket) throws IOException {
+	public TCPRecieverThread(TCPConnection conn, Socket socket) throws IOException {
+		this.conn = conn;
 		this.socket = socket;
 		this.din = new DataInputStream(socket.getInputStream());
 	}
@@ -21,12 +24,13 @@ public class TCPRecieverThread implements Runnable{
 	@Override
 	public void run() {
 		int dataLength;
-		while(socket != null) {
+		while(!isDone) {
 			try {
 				dataLength = din.readInt();
 				byte[] data = new byte[dataLength];
 				din.readFully(data,0,dataLength);
 				Event event = EventFactory.create(dataLength,data);
+				conn.getParentNode().onEvent(event,conn);
 			} catch(SocketException se) {
 				System.out.println(se.getMessage());
 				break;
@@ -39,9 +43,14 @@ public class TCPRecieverThread implements Runnable{
 		}
 	}
 
-	public void close() throws IOException {
+	public void finish() throws IOException {
+		this.isDone = true;
 		din.close();
 		socket.close();
+	}
+	
+	public int getPort() {
+		return socket.getPort();
 	}
 	
 }
