@@ -44,7 +44,11 @@ public class Registry implements Node{
 				if(command.equalsIgnoreCase("quit")) {
 					registry.running = false;
 					System.out.println("Stopping");
-				}else {
+				} else if(command.equalsIgnoreCase("list-messaging-nodes")){
+					
+				} else if(command.equalsIgnoreCase("list-weights")){
+					
+				} else {
 					System.out.println("Command Not recognized");
 				}
 			}
