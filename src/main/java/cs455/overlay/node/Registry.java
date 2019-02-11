@@ -84,7 +84,7 @@ public class Registry implements Node{
 	}
 	
 	public void onListening(int port) {
-		System.out.println("Listening on port "+port);
+		System.out.println("Listening to port "+port);
 	}
 	
 	public void onConnection(TCPConnection connection) {
