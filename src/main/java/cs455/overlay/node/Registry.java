@@ -83,9 +83,8 @@ public class Registry implements Node{
 		conn.sendData(marshallBytes);
 	}
 	
-	public void onListening(Node node) {
-		Registry reg = (Registry)node;
-		System.out.println("Listening on port "+reg.socketListener.getPort());
+	public void onListening(int port) {
+		System.out.println("Listening on port "+port);
 	}
 	
 	public void onConnection(TCPConnection connection) {

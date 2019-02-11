@@ -84,7 +84,7 @@ public class MessagingNode implements Node{
 	}
 
 	@Override
-	public void onListening(Node node) {
+	public void onListening(int port) {
 		// TODO Auto-generated method stub
 		
 	}

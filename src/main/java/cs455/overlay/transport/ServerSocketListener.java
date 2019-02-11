@@ -34,8 +34,8 @@ public class ServerSocketListener implements Runnable{
 				tempPort++;
 			}
 		}
-		port = serverSocket.getLocalPort();
-		parent.onListening(parent);
+		port = tempPort;
+		parent.onListening(port);
 		this.isListening = true;
 		while(isListening) {
 			try {

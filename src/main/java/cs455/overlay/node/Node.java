@@ -11,6 +11,6 @@ public interface Node {
 	
 	public void onConnection(TCPConnection connection);
 	
-	public void onListening(Node node);
+	public void onListening(int port);
 	
 }
