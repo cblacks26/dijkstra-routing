@@ -36,6 +36,7 @@ public class MessagingNode implements Node{
 	
 	private void createSocket(Node node, String host, int port) {
 		try {
+			System.out.println(host+":"+port);
 			regSocket = new Socket(host,port);
 			conn = new TCPConnection(node, regSocket);
 		} catch (IOException e) {
