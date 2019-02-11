@@ -27,6 +27,8 @@ public class Registry implements Node{
 		this.connections = new HashMap<String,TCPConnection>();
 		try {
 			this.socketListener = new ServerSocketListener(this,port);
+			Thread newListener = new Thread(socketListener);
+			newListener.start();
 		}catch(UnknownHostException uhe) {
 			System.out.println(uhe.getMessage());
 		}
@@ -42,7 +44,6 @@ public class Registry implements Node{
 		}
 		Registry registry = new Registry(portArg);
 		registry.running = true;
-		System.out.println("Listening on port "+registry.socketListener.getPort());
 		Scanner input = new Scanner(System.in);
 		while(registry.running) {
 			if(input.hasNextLine()) {
@@ -74,11 +75,9 @@ public class Registry implements Node{
 	public void registerResponse(int result, TCPConnection conn) throws IOException {
 		String info = "";
 		byte[] infoBytes = info.getBytes();
-		int msgLength = infoBytes.length+8;
 		byte[] marshallBytes = null;
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(baos));
-		dos.writeInt(msgLength);
 		dos.writeInt(2);
 		dos.writeInt(result);
 		dos.write(infoBytes);
