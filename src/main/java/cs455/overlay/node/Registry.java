@@ -6,6 +6,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.HashMap;
+import java.util.Random;
 import java.util.Scanner;
 
 import cs455.overlay.transport.ServerSocketListener;
@@ -17,6 +18,8 @@ public class Registry implements Node{
 
 	private static Registry mainRegistry = null;
 	private HashMap<String,String[]> nodes;
+	private boolean overlaySetup = false;
+	private int numConns = -1;
 	private ServerSocketListener socketListener = null;
 	private HashMap<String,TCPConnection> connections;
 	private volatile boolean running;
@@ -54,7 +57,23 @@ public class Registry implements Node{
 				} else if(command.equalsIgnoreCase("list-messaging-nodes")){
 					
 				} else if(command.equalsIgnoreCase("list-weights")){
+					if(!overlaySetup) {
+						System.out.println("Overlay must be setup to list the weights");
+					}else {
+						// print weights between nodes
+					}
 					
+				} else if(command.equalsIgnoreCase("setup-overlay")){
+					if(input.hasNextLine()) {
+						try {
+							numConns = Integer.parseInt(input.nextLine());
+						}catch(NumberFormatException ne) {
+							System.out.println("Cannot convert number-of-connections argument into integer");
+						}
+						registry.setupOverlay();
+					}else {
+						System.out.println("setup-overlay requires a number-of-connections argument");
+					}
 				} else {
 					System.out.println("Command Not recognized");
 				}
@@ -134,5 +153,17 @@ public class Registry implements Node{
 	public void errorListening(String message) {
 		System.out.println(message);
 		System.exit(1);
+	}
+	
+	private void setupOverlay() {
+		if(nodes.size()<numConns) {
+			System.out.println("Error must have atleast "+numConns +" to setup the overlay");
+		}else {
+			for(String node:nodes.keySet()) {
+				Random rand = new Random();
+				int weight = rand.nextInt(9) + 1;
+				// Add weights and link nodes
+			}
+		}
 	}
 }
