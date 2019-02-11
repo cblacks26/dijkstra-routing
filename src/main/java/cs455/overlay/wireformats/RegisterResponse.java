@@ -11,7 +11,9 @@ public class RegisterResponse extends Event{
 		super(data);
 		
 		result = dis.readInt();
-		info = dis.readNBytes(data.length-8).toString();
+		byte[] buff = new byte[data.length];
+		dis.readFully(buff,0,data.length-8);
+		close();
 	}
 
 	public int getResult() {

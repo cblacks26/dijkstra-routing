@@ -11,7 +11,8 @@ public class Register extends Event{
 		super(data);
 		
 		// read bytes minus an integer for the port
-		ipAddress = dis.readNBytes(data.length-8).toString();
+		byte[] buff = new byte[data.length];
+		dis.readFully(buff,0,data.length-8);
 		port = dis.readInt();
 		close();
 	}
