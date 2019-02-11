@@ -70,9 +70,11 @@ public class MessagingNode implements Node{
 			// SUCCESS
 			if(regRes.getResult()==1) {
 				ServerSocketListener listener = new ServerSocketListener(this);
+				System.out.println("Register successful");
 			// FAILURE
 			}else {
-				
+				System.out.println(regRes.getExtraInfo());
+				System.exit(1);
 			}
 		} else {
 			System.out.println("Error should not be recieving messages of this type");

@@ -72,8 +72,7 @@ public class Registry implements Node{
 		return socketListener;
 	}
 	
-	public void registerResponse(int result, TCPConnection conn) throws IOException {
-		String info = "";
+	public void registerResponse(int result, String info, TCPConnection conn) throws IOException {
 		byte[] infoBytes = info.getBytes();
 		byte[] marshallBytes = null;
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -111,12 +110,15 @@ public class Registry implements Node{
 			Register regReq = (Register) e;
 			System.out.println("Recieved a Register Request");
 			String key = regReq.getIPAddress()+":"+regReq.getNodePort();
+			if(nodes.containsKey(key)) {
+				registerResponse(0,"Error Host with that port is already registered",connection);
+			}
 			// Find nodes to connect to and add them to values
 			String[] values = new String[4];
 			// Add the messenger node to the list
 			nodes.put(key, values);
 			// 1 is a SUCCESS 0 is a FAILURE
-			registerResponse(1,connection);
+			registerResponse(1,"",connection);
 		// DeRegister Event
 		}else if(e.getType()==3) {
 			
