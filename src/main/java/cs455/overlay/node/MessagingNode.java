@@ -89,4 +89,10 @@ public class MessagingNode implements Node{
 		
 	}
 
+	@Override
+	public void errorListening(String message) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

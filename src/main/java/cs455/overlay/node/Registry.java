@@ -21,12 +21,12 @@ public class Registry implements Node{
 	private HashMap<String,TCPConnection> connections;
 	private volatile boolean running;
 	
-	public Registry() {
+	public Registry(int port) {
 		this.nodes = new HashMap<String,String[]>();
 		this.running = false;
 		this.connections = new HashMap<String,TCPConnection>();
 		try {
-			this.socketListener = new ServerSocketListener(this);
+			this.socketListener = new ServerSocketListener(this,port);
 		}catch(UnknownHostException uhe) {
 			System.out.println(uhe.getMessage());
 		}
@@ -34,7 +34,13 @@ public class Registry implements Node{
 	}
 	
 	public static void main(String[] args) throws UnknownHostException {
-		Registry registry = new Registry();
+		int portArg = 0;
+		if(args.length != 1) {
+			System.out.println("Must have a port specified!");
+		}else {
+			portArg = Integer.parseInt(args[0]);
+		}
+		Registry registry = new Registry(portArg);
 		registry.running = true;
 		System.out.println("Listening on port "+registry.socketListener.getPort());
 		Scanner input = new Scanner(System.in);
@@ -121,5 +127,11 @@ public class Registry implements Node{
 		}else {
 			
 		}
+	}
+
+	@Override
+	public void errorListening(String message) {
+		System.out.println(message);
+		System.exit(1);
 	}
 }

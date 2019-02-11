@@ -11,7 +11,7 @@ import cs455.overlay.node.Node;
 public class ServerSocketListener implements Runnable{
 
 	private volatile boolean isListening;
-	private int port;
+	private int port = -1;
 	private String address;
 	private Node parent;
 	
@@ -22,15 +22,30 @@ public class ServerSocketListener implements Runnable{
 		this.isListening = false;
 	}
 	
+	public ServerSocketListener(Node parent, int port) throws UnknownHostException {
+		this.isListening = false;
+		this.parent = parent;
+		this.address = InetAddress.getLocalHost().getHostAddress();
+		this.port = port;
+		this.isListening = false;
+	}
+	
 	@Override
 	public void run() {
-		int tempPort = 5000;
+		int tempPort = -1;
+		if(port > 0) {
+			tempPort = port;
+		}
 		ServerSocket serverSocket = null;
-		while(!serverSocket.isBound()) {
+		while(serverSocket == null) {
 			try {
 				serverSocket = new ServerSocket(tempPort);
 			} catch (IOException e) {
 				System.out.println("Error creating ServerSocket: "+e.getMessage());
+				if(port > 0) {
+					parent.errorListening("Error creating ServerSocket, port most likely taken");
+					return;
+				}
 				tempPort++;
 			}
 		}

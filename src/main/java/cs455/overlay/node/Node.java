@@ -13,4 +13,6 @@ public interface Node {
 	
 	public void onListening(int port);
 	
+	public void errorListening(String message);
+	
 }
