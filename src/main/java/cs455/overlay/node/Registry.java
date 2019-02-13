@@ -5,27 +5,28 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Random;
 import java.util.Scanner;
 
 import cs455.overlay.transport.ServerSocketListener;
 import cs455.overlay.transport.TCPConnection;
+import cs455.overlay.util.Overlay;
 import cs455.overlay.wireformats.Event;
 import cs455.overlay.wireformats.Register;
 
 public class Registry implements Node{
 
 	private static Registry mainRegistry = null;
-	private HashMap<String,String[]> nodes;
-	private boolean overlaySetup = false;
-	private int numConns = -1;
+	private ArrayList<String> nodes;
+	private Overlay overlay = null;
+	private int numConns = 4;
 	private ServerSocketListener socketListener = null;
 	private HashMap<String,TCPConnection> connections;
 	private volatile boolean running;
 	
 	public Registry(int port) {
-		this.nodes = new HashMap<String,String[]>();
+		this.nodes = new ArrayList<String>();
 		this.running = false;
 		this.connections = new HashMap<String,TCPConnection>();
 		try {
@@ -35,7 +36,6 @@ public class Registry implements Node{
 		}catch(UnknownHostException uhe) {
 			System.out.println(uhe.getMessage());
 		}
-		
 	}
 	
 	public static void main(String[] args) throws UnknownHostException {
@@ -57,7 +57,7 @@ public class Registry implements Node{
 				} else if(command.equalsIgnoreCase("list-messaging-nodes")){
 					
 				} else if(command.equalsIgnoreCase("list-weights")){
-					if(!overlaySetup) {
+					if(registry.overlay==null) {
 						System.out.println("Overlay must be setup to list the weights");
 					}else {
 						// print weights between nodes
@@ -66,14 +66,12 @@ public class Registry implements Node{
 				} else if(command.equalsIgnoreCase("setup-overlay")){
 					if(input.hasNextLine()) {
 						try {
-							numConns = Integer.parseInt(input.nextLine());
+							registry.numConns = Integer.parseInt(input.nextLine());
 						}catch(NumberFormatException ne) {
 							System.out.println("Cannot convert number-of-connections argument into integer");
 						}
-						registry.setupOverlay();
-					}else {
-						System.out.println("setup-overlay requires a number-of-connections argument");
 					}
+					registry.setupOverlay();
 				} else {
 					System.out.println("Command Not recognized");
 				}
@@ -129,13 +127,15 @@ public class Registry implements Node{
 			Register regReq = (Register) e;
 			System.out.println("Recieved a Register Request");
 			String key = regReq.getIPAddress()+":"+regReq.getNodePort();
-			if(nodes.containsKey(key)) {
+			if(nodes.contains(key)) {
 				registerResponse(0,"Error Host with that port is already registered",connection);
+			}else {
+				// Add the messenger node to the list
+				nodes.add(key);
+				registerResponse(1,"Added Node to Messaging node list",connection);
 			}
 			// Find nodes to connect to and add them to values
-			String[] values = new String[4];
-			// Add the messenger node to the list
-			nodes.put(key, values);
+			
 			// 1 is a SUCCESS 0 is a FAILURE
 			registerResponse(1,"",connection);
 		// DeRegister Event
@@ -159,11 +159,7 @@ public class Registry implements Node{
 		if(nodes.size()<numConns) {
 			System.out.println("Error must have atleast "+numConns +" to setup the overlay");
 		}else {
-			for(String node:nodes.keySet()) {
-				Random rand = new Random();
-				int weight = rand.nextInt(9) + 1;
-				// Add weights and link nodes
-			}
+			this.overlay = new Overlay(nodes, numConns);
 		}
 	}
 }
