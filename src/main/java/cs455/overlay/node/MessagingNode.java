@@ -2,22 +2,26 @@ package cs455.overlay.node;
 
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.HashMap;
 
 import cs455.overlay.transport.ServerSocketListener;
 import cs455.overlay.transport.TCPConnection;
+import cs455.overlay.util.Overlay;
 import cs455.overlay.wireformats.Event;
+import cs455.overlay.wireformats.LinkWeights;
+import cs455.overlay.wireformats.MessagingNodesList;
 import cs455.overlay.wireformats.RegisterResponse;
 
 public class MessagingNode implements Node{
 
-	private Socket regSocket;
-	private TCPConnection conn;
+	private String regist;
+	private HashMap<String,TCPConnection> conns;
+	private Overlay overlay;
 	
 	public static void main(String args[]) throws IOException{
 		String host = null;
@@ -28,19 +32,19 @@ public class MessagingNode implements Node{
 		}else {
 			host = args[0];
 			port = Integer.parseInt(args[1]);
+			
 		}
 		MessagingNode node = new MessagingNode();
+		node.regist = host+":"+port;
 		node.createSocket(node,host,port);
 		node.register();
 	}
 	
 	private void createSocket(Node node, String host, int port) {
 		try {
-			System.out.println(host+":"+port);
-			regSocket = new Socket(host,port);
-			conn = new TCPConnection(node, regSocket);
+			conns.put(regist,new TCPConnection(node, new Socket(host,port)));
 		} catch (IOException e) {
-			System.out.println("Error connecting to Registry: "+ e.getMessage());
+			System.out.println("Error creating socket to "+host+":"+port+": "+ e.getMessage());
 			
 		}
 	}
@@ -51,7 +55,7 @@ public class MessagingNode implements Node{
 		DataOutputStream dataOut = new DataOutputStream(new BufferedOutputStream(baos));
 		int type = 1;
 		byte[] ip = InetAddress.getLocalHost().getHostAddress().getBytes();
-		int port = conn.getListeningPort();
+		int port = conns.get(0).getListeningPort();
 		dataOut.writeInt(type);
 		dataOut.write(ip);
 		dataOut.writeInt(port);
@@ -59,7 +63,7 @@ public class MessagingNode implements Node{
 		marshalBytes = baos.toByteArray();
 		dataOut.close();
 		baos.close();
-		conn.sendData(marshalBytes);
+		conns.get(regist).sendData(marshalBytes);
 	}
 	
 	@Override
@@ -76,7 +80,18 @@ public class MessagingNode implements Node{
 				System.out.println(regRes.getExtraInfo());
 				System.exit(1);
 			}
-		} else {
+		} else if(e.getType() == 4) {
+			MessagingNodesList mnl = (MessagingNodesList)e;
+			for(String node:mnl.getNodes()) {
+				String[] info = node.split(":");
+				createSocket(this,info[0],Integer.parseInt(info[1]));
+			}
+			System.out.println("All connections are established. Number of connections: "+mnl.getNumberOfNodes());
+		}else if(e.getType() == 5) {
+			LinkWeights lw = (LinkWeights)e;
+			this.overlay = new Overlay(lw.getLinks());
+			System.out.println("Link weights are received and processed. Ready to send messages.");
+		}else {
 			System.out.println("Error should not be recieving messages of this type");
 		}
 	}

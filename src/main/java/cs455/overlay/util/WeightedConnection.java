@@ -15,6 +15,12 @@ public class WeightedConnection {
 		this.weight = rand.nextInt(10)+1;
 	}
 	
+	public WeightedConnection(String nodeA, String nodeB, int weight) {
+		this.nodeA = nodeA;
+		this.nodeB = nodeB;
+		this.weight = weight;
+	}
+	
 	public int getWeight() {
 		return weight;
 	}
@@ -25,6 +31,11 @@ public class WeightedConnection {
 	
 	public String getSecondNode() {
 		return nodeB;
+	}
+	
+	@Override
+	public String toString() {
+		return getFirstNode()+" "+getSecondNode()+" "+getWeight();
 	}
 	
 	public boolean equals(Object o) {

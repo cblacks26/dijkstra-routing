@@ -17,11 +17,11 @@ public class EventFactory{
 		}else if (type == 2) {
 			event = new RegisterResponse(bytes);
 		}else if (type == 3){
-			
+			event = new Deregister(bytes);
 		}else if (type == 4) {
-			
+			event = new MessagingNodesList(bytes);
 		}else if (type == 5) {
-			
+			event = new LinkWeights(bytes);
 		}else {
 			throw new Exception("Unrecognized Message Type");
 		}

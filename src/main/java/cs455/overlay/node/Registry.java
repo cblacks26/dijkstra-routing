@@ -12,6 +12,7 @@ import java.util.Scanner;
 import cs455.overlay.transport.ServerSocketListener;
 import cs455.overlay.transport.TCPConnection;
 import cs455.overlay.util.Overlay;
+import cs455.overlay.util.WeightedConnection;
 import cs455.overlay.wireformats.Event;
 import cs455.overlay.wireformats.Register;
 
@@ -55,12 +56,20 @@ public class Registry implements Node{
 					registry.running = false;
 					System.out.println("Stopping");
 				} else if(command.equalsIgnoreCase("list-messaging-nodes")){
-					
+					if(registry.overlay==null) {
+						System.out.println("Overlay must be setup to list the nodes");
+					}else {
+						for(String node:registry.nodes) {
+							System.out.println(node);
+						}
+					}
 				} else if(command.equalsIgnoreCase("list-weights")){
 					if(registry.overlay==null) {
 						System.out.println("Overlay must be setup to list the weights");
 					}else {
-						// print weights between nodes
+						for(WeightedConnection wc:registry.overlay.getLinks()) {
+							System.out.println(wc);
+						}
 					}
 					
 				} else if(command.equalsIgnoreCase("setup-overlay")){
@@ -160,6 +169,65 @@ public class Registry implements Node{
 			System.out.println("Error must have atleast "+numConns +" to setup the overlay");
 		}else {
 			this.overlay = new Overlay(nodes, numConns);
+			try {
+				sendLinkCommand();
+				sendOverlay();
+			}catch(IOException ioe) {
+				System.out.println("Error sending messaging nodes list or Overlay "+ioe.getMessage());
+				System.exit(1);
+			}
+		}
+	}
+	
+	private void sendList(int type, int number, String list, TCPConnection con) throws IOException {
+		byte[] marshallBytes = null;
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(baos));
+		dos.writeInt(type);
+		dos.writeInt(number);
+		dos.write(list.getBytes());
+		dos.flush();
+		marshallBytes = baos.toByteArray();
+		baos.close();
+		dos.close();
+		con.sendData(marshallBytes);
+	}
+	
+	private void sendLinkCommand() throws IOException {
+		for(String node:connections.keySet()) {
+			int numLinks = 0;
+			String links = "";
+			for(WeightedConnection wc:overlay.getLinks()) {
+				if(wc.getFirstNode().equalsIgnoreCase(node)) {
+					numLinks++;
+					links+=wc.getSecondNode()+" ";
+				}
+			}
+			if(numLinks>0) {
+				links.trim();
+				sendList(4,numLinks,links,connections.get(node));
+			}
+		}
+	}
+	
+	private void sendOverlay() throws IOException {
+		String links = "";
+		for(WeightedConnection wc:overlay.getLinks()) {
+			links+=wc.getFirstNode()+","+wc.getSecondNode()+","+wc.getWeight()+" ";
+		}
+		links.trim();
+		byte[] marshallBytes = null;
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(baos));
+		dos.writeInt(5);
+		dos.writeInt(overlay.getLinks().size());
+		dos.write(links.getBytes());
+		dos.flush();
+		marshallBytes = baos.toByteArray();
+		baos.close();
+		dos.close();
+		for(TCPConnection con:connections.values()) {
+			con.sendData(marshallBytes);
 		}
 	}
 }
