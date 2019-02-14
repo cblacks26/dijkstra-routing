@@ -28,6 +28,13 @@ public class MessagingNode implements Node{
 		this.registry = host+":"+port;
 		this.listener = null;
 		this.overlay = null;
+		try {
+			this.listener = new ServerSocketListener(this);
+			Thread thread = new Thread(listener);
+			thread.start();
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	public static void main(String args[]) throws IOException{
@@ -56,8 +63,8 @@ public class MessagingNode implements Node{
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		DataOutputStream dataOut = new DataOutputStream(new BufferedOutputStream(baos));
 		int type = 1;
-		byte[] ip = InetAddress.getLocalHost().getHostAddress().getBytes();
-		int port = conns.get(registry).getListeningPort();
+		byte[] ip = listener.getAddress().getBytes();
+		int port = listener.getPort();
 		dataOut.writeInt(type);
 		dataOut.write(ip);
 		dataOut.writeInt(port);
@@ -79,6 +86,7 @@ public class MessagingNode implements Node{
 				System.out.println("Register successful");
 			// FAILURE
 			}else {
+				System.out.println("error");
 				System.out.println(regRes.getExtraInfo());
 				System.exit(1);
 			}

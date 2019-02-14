@@ -35,21 +35,22 @@ public class ServerSocketListener implements Runnable{
 		int tempPort = -1;
 		if(port > 0) {
 			tempPort = port;
+		}else {
+			tempPort = 5001;
 		}
 		ServerSocket serverSocket = null;
-		while(serverSocket == null) {
+		boolean bound = false;
+		while(!bound) {
 			try {
 				serverSocket = new ServerSocket(tempPort);
+				bound = true;
 			} catch (IOException e) {
-				System.out.println("Error creating ServerSocket: "+e.getMessage());
-				if(port > 0) {
-					parent.errorListening("Error creating ServerSocket, port most likely taken");
-					return;
-				}
+				bound = false;
 				tempPort++;
 			}
 		}
 		port = tempPort;
+		System.out.println("Created ServerSocket at port: "+port);
 		parent.onListening(port);
 		this.isListening = true;
 		while(isListening) {

@@ -130,8 +130,8 @@ public class Registry implements Node{
 		// Register Event
 		if(e.getType()==1) {
 			Register regReq = (Register) e;
-			System.out.println("Recieved a Register Request");
 			String key = regReq.getIPAddress()+":"+regReq.getNodePort();
+			System.out.println("Recieved a Register Request from "+key);
 			if(nodes.contains(key)) {
 				registerResponse(0,"Error Host with that port is already registered",connection);
 			}else {
