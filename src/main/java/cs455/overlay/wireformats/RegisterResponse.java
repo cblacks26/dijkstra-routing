@@ -13,7 +13,7 @@ public class RegisterResponse extends Event{
 		result = dis.readInt();
 		byte[] buff = new byte[data.length];
 		dis.readFully(buff,0,data.length-8);
-		info = buff.toString();
+		info = new String(buff);
 		close();
 	}
 

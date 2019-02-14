@@ -13,6 +13,7 @@ public class Register extends Event{
 		// read bytes minus an integer for the port
 		byte[] buff = new byte[data.length];
 		dis.readFully(buff,0,data.length-8);
+		ipAddress = new String(buff);
 		port = dis.readInt();
 		close();
 	}
