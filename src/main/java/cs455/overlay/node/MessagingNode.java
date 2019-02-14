@@ -13,6 +13,7 @@ import cs455.overlay.util.Overlay;
 import cs455.overlay.wireformats.Event;
 import cs455.overlay.wireformats.LinkWeights;
 import cs455.overlay.wireformats.MessagingNodesList;
+import cs455.overlay.wireformats.Register;
 import cs455.overlay.wireformats.RegisterResponse;
 
 public class MessagingNode implements Node{
@@ -57,22 +58,8 @@ public class MessagingNode implements Node{
 	}
 	
 	private void register(){
-		int type = 1;
-		byte[] ip = listener.getAddress().getBytes();
-		int port = listener.getPort();
-		byte[] marshalBytes = null;
 		try {
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			DataOutputStream dataOut = new DataOutputStream(new BufferedOutputStream(baos));
-			
-			dataOut.writeInt(type);
-			dataOut.write(ip);
-			dataOut.writeInt(port);
-			dataOut.flush();
-			marshalBytes = baos.toByteArray();
-			dataOut.close();
-			baos.close();
-			conns.get(registry).sendData(marshalBytes);
+			conns.get(registry).sendData(Register.createMessage(listener.getAddress(), listener.getPort()));
 		}catch(IOException ioe) {
 			System.out.println("Error sending register message to registry: "+ioe.getMessage());
 		}
@@ -95,6 +82,7 @@ public class MessagingNode implements Node{
 			}
 		} else if(e.getType() == 4) {
 			MessagingNodesList mnl = (MessagingNodesList)e;
+			System.out.println("Recieved MessagingNodesList");
 			for(String node:mnl.getNodes()) {
 				String[] info = node.split(":");
 				createSocket(this,info[0],Integer.parseInt(info[1]));

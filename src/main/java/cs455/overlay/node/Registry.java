@@ -1,8 +1,5 @@
 package cs455.overlay.node;
 
-import java.io.BufferedOutputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -14,11 +11,14 @@ import cs455.overlay.transport.TCPConnection;
 import cs455.overlay.util.Overlay;
 import cs455.overlay.util.WeightedConnection;
 import cs455.overlay.wireformats.Event;
+import cs455.overlay.wireformats.LinkWeights;
+import cs455.overlay.wireformats.MessagingNodesList;
 import cs455.overlay.wireformats.Register;
+import cs455.overlay.wireformats.RegisterResponse;
 
 public class Registry implements Node{
 
-	private static Registry mainRegistry = null;
+	private static final Registry mainRegistry = null;
 	private ArrayList<String> nodes;
 	private Overlay overlay = null;
 	private int numConns = 4;
@@ -50,8 +50,9 @@ public class Registry implements Node{
 		registry.running = true;
 		Scanner input = new Scanner(System.in);
 		while(registry.running) {
+			System.out.print("Command type help for list of commands: ");
 			if(input.hasNextLine()) {
-				String command = input.nextLine();
+				String command = input.nextLine().trim();
 				if(command.equalsIgnoreCase("quit")) {
 					registry.running = false;
 					System.out.println("Stopping");
@@ -67,11 +68,11 @@ public class Registry implements Node{
 							System.out.println(wc);
 						}
 					}
-					
-				} else if(command.equalsIgnoreCase("setup-overlay")){
-					if(input.hasNextLine()) {
+				} else if(command.contains("setup-overlay")){
+					if(Character.isDigit(command.charAt(command.length()-1))&&command.contains(" ")) {
+						String[] split = command.split(" ");
 						try {
-							registry.numConns = Integer.parseInt(input.nextLine());
+							registry.numConns = Integer.parseInt(split[1]);
 						}catch(NumberFormatException ne) {
 							System.out.println("Cannot convert number-of-connections argument into integer");
 						}
@@ -95,18 +96,7 @@ public class Registry implements Node{
 	}
 	
 	public void registerResponse(int result, String info, TCPConnection conn) throws IOException {
-		byte[] infoBytes = info.getBytes();
-		byte[] marshallBytes = null;
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(baos));
-		dos.writeInt(2);
-		dos.writeInt(result);
-		dos.write(infoBytes);
-		dos.flush();
-		marshallBytes = baos.toByteArray();
-		baos.close();
-		dos.close();
-		conn.sendData(marshallBytes);
+		conn.sendData(RegisterResponse.createMessage(info, result));
 	}
 	
 	public void onListening(int port) {
@@ -160,28 +150,17 @@ public class Registry implements Node{
 			System.out.println("Error must have atleast "+numConns +" to setup the overlay");
 		}else {
 			this.overlay = new Overlay(nodes, numConns);
+			System.out.println("Created overlay");
 			try {
 				sendLinkCommand();
+				System.out.println("Sent Link Command");
 				sendOverlay();
+				System.out.println("Sent Overlay");
 			}catch(IOException ioe) {
 				System.out.println("Error sending messaging nodes list or Overlay "+ioe.getMessage());
 				System.exit(1);
 			}
 		}
-	}
-	
-	private void sendList(int type, int number, String list, TCPConnection con) throws IOException {
-		byte[] marshallBytes = null;
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(baos));
-		dos.writeInt(type);
-		dos.writeInt(number);
-		dos.write(list.getBytes());
-		dos.flush();
-		marshallBytes = baos.toByteArray();
-		baos.close();
-		dos.close();
-		con.sendData(marshallBytes);
 	}
 	
 	private void sendLinkCommand() throws IOException {
@@ -196,7 +175,7 @@ public class Registry implements Node{
 			}
 			if(numLinks>0) {
 				links.trim();
-				sendList(4,numLinks,links,connections.get(node));
+				connections.get(node).sendData(LinkWeights.createMessage(links, numLinks));
 			}
 		}
 	}
@@ -207,18 +186,9 @@ public class Registry implements Node{
 			links+=wc.getFirstNode()+","+wc.getSecondNode()+","+wc.getWeight()+" ";
 		}
 		links.trim();
-		byte[] marshallBytes = null;
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(baos));
-		dos.writeInt(5);
-		dos.writeInt(overlay.getLinks().size());
-		dos.write(links.getBytes());
-		dos.flush();
-		marshallBytes = baos.toByteArray();
-		baos.close();
-		dos.close();
+		byte[] bytes = MessagingNodesList.createMessage(links, overlay.getLinks().size());
 		for(TCPConnection con:connections.values()) {
-			con.sendData(marshallBytes);
+			con.sendData(bytes);
 		}
 	}
 }

@@ -27,16 +27,17 @@ public class TCPRecieverThread implements Runnable{
 				dataLength = din.readInt();
 				byte[] data = new byte[dataLength];
 				din.readFully(data,0,dataLength);
+				System.out.println("Creating Event");
 				Event event = EventFactory.create(dataLength,data);
 				conn.getParentNode().onEvent(event,conn);
 			} catch(SocketException se) {
-				System.out.println(se.getMessage());
+				System.out.println("SE: "+se.getMessage());
 				break;
 			} catch(IOException e) {
-				System.out.println(e.getMessage());
+				System.out.println("IOE: "+e.getMessage());
 				break;
 			} catch (Exception e) {
-				System.out.println(e.getMessage());
+				System.out.println("E: "+e.getMessage());
 			}
 		}
 	}

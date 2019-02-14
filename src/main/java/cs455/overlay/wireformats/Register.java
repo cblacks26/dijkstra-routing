@@ -1,5 +1,8 @@
 package cs455.overlay.wireformats;
 
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 
 public class Register extends Event{
@@ -24,5 +27,19 @@ public class Register extends Event{
 	
 	public String getIPAddress() {
 		return ipAddress;
+	}
+	
+	public static byte[] createMessage(String ip, int port) throws IOException {
+		byte[] marshalBytes = null;
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		DataOutputStream dataOut = new DataOutputStream(new BufferedOutputStream(baos));
+		dataOut.writeInt(1);
+		dataOut.write(ip.getBytes());
+		dataOut.writeInt(port);
+		dataOut.flush();
+		marshalBytes = baos.toByteArray();
+		dataOut.close();
+		baos.close();
+		return marshalBytes;
 	}
 }

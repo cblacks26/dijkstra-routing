@@ -1,5 +1,8 @@
 package cs455.overlay.wireformats;
 
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 
 public class RegisterResponse extends Event{
@@ -23,5 +26,20 @@ public class RegisterResponse extends Event{
 	
 	public String getExtraInfo() {
 		return info;
+	}
+	
+	public static byte[] createMessage(String info, int result) throws IOException {
+		byte[] infoBytes = info.getBytes();
+		byte[] marshallBytes = null;
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(baos));
+		dos.writeInt(2);
+		dos.writeInt(result);
+		dos.write(infoBytes);
+		dos.flush();
+		marshallBytes = baos.toByteArray();
+		baos.close();
+		dos.close();
+		return marshallBytes;
 	}
 }
