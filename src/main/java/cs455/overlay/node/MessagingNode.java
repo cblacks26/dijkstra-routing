@@ -5,7 +5,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
-import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 
@@ -19,9 +18,17 @@ import cs455.overlay.wireformats.RegisterResponse;
 
 public class MessagingNode implements Node{
 
-	private String regist;
+	private String registry;
 	private HashMap<String,TCPConnection> conns;
+	private ServerSocketListener listener;
 	private Overlay overlay;
+	
+	public MessagingNode(String host, int port) {
+		this.conns = new HashMap<String,TCPConnection>();
+		this.registry = host+":"+port;
+		this.listener = null;
+		this.overlay = null;
+	}
 	
 	public static void main(String args[]) throws IOException{
 		String host = null;
@@ -34,19 +41,14 @@ public class MessagingNode implements Node{
 			port = Integer.parseInt(args[1]);
 			
 		}
-		MessagingNode node = new MessagingNode();
-		node.regist = host+":"+port;
+		MessagingNode node = new MessagingNode(host,port);
 		node.createSocket(node,host,port);
 		node.register();
 	}
 	
 	private void createSocket(Node node, String host, int port) {
-		try {
-			conns.put(regist,new TCPConnection(node, new Socket(host,port)));
-		} catch (IOException e) {
-			System.out.println("Error creating socket to "+host+":"+port+": "+ e.getMessage());
-			
-		}
+		TCPConnection conn = new TCPConnection(node, host, port);
+		conns.put(host+":"+port, conn);
 	}
 	
 	private void register() throws IOException {
@@ -55,7 +57,7 @@ public class MessagingNode implements Node{
 		DataOutputStream dataOut = new DataOutputStream(new BufferedOutputStream(baos));
 		int type = 1;
 		byte[] ip = InetAddress.getLocalHost().getHostAddress().getBytes();
-		int port = conns.get(0).getListeningPort();
+		int port = conns.get(registry).getListeningPort();
 		dataOut.writeInt(type);
 		dataOut.write(ip);
 		dataOut.writeInt(port);
@@ -63,7 +65,7 @@ public class MessagingNode implements Node{
 		marshalBytes = baos.toByteArray();
 		dataOut.close();
 		baos.close();
-		conns.get(regist).sendData(marshalBytes);
+		conns.get(registry).sendData(marshalBytes);
 	}
 	
 	@Override
@@ -73,7 +75,7 @@ public class MessagingNode implements Node{
 			RegisterResponse regRes = (RegisterResponse)e;
 			// SUCCESS
 			if(regRes.getResult()==1) {
-				ServerSocketListener listener = new ServerSocketListener(this);
+				listener = new ServerSocketListener(this);
 				System.out.println("Register successful");
 			// FAILURE
 			}else {

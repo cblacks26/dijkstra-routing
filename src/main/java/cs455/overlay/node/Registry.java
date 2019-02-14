@@ -56,12 +56,8 @@ public class Registry implements Node{
 					registry.running = false;
 					System.out.println("Stopping");
 				} else if(command.equalsIgnoreCase("list-messaging-nodes")){
-					if(registry.overlay==null) {
-						System.out.println("Overlay must be setup to list the nodes");
-					}else {
-						for(String node:registry.nodes) {
-							System.out.println(node);
-						}
+					for(String node:registry.nodes) {
+						System.out.println(node);
 					}
 				} else if(command.equalsIgnoreCase("list-weights")){
 					if(registry.overlay==null) {
@@ -139,14 +135,9 @@ public class Registry implements Node{
 			if(nodes.contains(key)) {
 				registerResponse(0,"Error Host with that port is already registered",connection);
 			}else {
-				// Add the messenger node to the list
 				nodes.add(key);
 				registerResponse(1,"Added Node to Messaging node list",connection);
 			}
-			// Find nodes to connect to and add them to values
-			
-			// 1 is a SUCCESS 0 is a FAILURE
-			registerResponse(1,"",connection);
 		// DeRegister Event
 		}else if(e.getType()==3) {
 			

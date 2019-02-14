@@ -21,12 +21,26 @@ public class TCPConnection {
 		listenerThread.start();
 	}
 	
+	public TCPConnection(Node node, String host, int port) {
+		this.parent = node;
+		try {
+			this.socket = new Socket(host,port);
+			listener = new TCPRecieverThread(this, socket);
+			sender = new TCPSender(socket);
+		} catch (IOException e) {
+			System.out.println("Error creating TCPConnection Object: "+e.getMessage());
+			System.exit(1);
+		}
+		Thread listenerThread = new Thread(listener);
+		listenerThread.start();
+	}
+	
 	public Node getParentNode() {
 		return parent;
 	}
 	
 	public int getListeningPort() {
-		return listener.getPort();
+		return socket.getPort();
 	}
 	
 	public void sendData(byte[] data) {

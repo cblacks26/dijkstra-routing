@@ -11,14 +11,12 @@ import cs455.overlay.wireformats.EventFactory;
 public class TCPRecieverThread implements Runnable{
 
 	private TCPConnection conn;
-	private Socket socket;
 	private DataInputStream din;
 	private volatile boolean isDone;
 	
 	public TCPRecieverThread(TCPConnection conn, Socket socket) throws IOException {
 		this.conn = conn;
-		this.socket = socket;
-		this.din = new DataInputStream(socket.getInputStream());
+		this.din = new DataInputStream(socket.getInputStream());;
 	}
 	
 	@Override
@@ -46,11 +44,5 @@ public class TCPRecieverThread implements Runnable{
 	public void finish() throws IOException {
 		this.isDone = true;
 		din.close();
-		socket.close();
 	}
-	
-	public int getPort() {
-		return socket.getPort();
-	}
-	
 }
