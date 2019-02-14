@@ -6,10 +6,12 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.HashMap;
+import java.util.Scanner;
 
 import cs455.overlay.transport.ServerSocketListener;
 import cs455.overlay.transport.TCPConnection;
 import cs455.overlay.util.Overlay;
+import cs455.overlay.util.Router;
 import cs455.overlay.wireformats.Event;
 import cs455.overlay.wireformats.LinkWeights;
 import cs455.overlay.wireformats.MessagingNodesList;
@@ -21,13 +23,14 @@ public class MessagingNode implements Node{
 	private String registry;
 	private HashMap<String,TCPConnection> conns;
 	private ServerSocketListener listener;
-	private Overlay overlay;
+	private Router router;
+	private volatile boolean running = true;
 	
 	public MessagingNode(String host, int port) {
 		this.conns = new HashMap<String,TCPConnection>();
 		this.registry = host+":"+port;
 		this.listener = null;
-		this.overlay = null;
+		this.router = null;
 		createSocket(this,host,port);
 		try {
 			this.listener = new ServerSocketListener(this);
@@ -50,6 +53,16 @@ public class MessagingNode implements Node{
 			
 		}
 		MessagingNode node = new MessagingNode(host,port);
+		Scanner input = new Scanner(System.in);
+		while(node.running) {
+			if(input.hasNextLine()) {
+				String command = input.nextLine().trim();
+				if(command.equalsIgnoreCase("quit-overlay")) {
+					node.running = false;
+					System.out.println("Stopping");
+				}
+			}
+		}
 	}
 	
 	private void createSocket(Node node, String host, int port) {
@@ -90,7 +103,7 @@ public class MessagingNode implements Node{
 			System.out.println("All connections are established. Number of connections: "+mnl.getNumberOfNodes());
 		}else if(e.getType() == 5) {
 			LinkWeights lw = (LinkWeights)e;
-			this.overlay = new Overlay(lw.getLinks());
+			this.router = new Router(listener.getAddress()+":"+listener.getPort(),lw.getLinks());
 			System.out.println("Link weights are received and processed. Ready to send messages.");
 		}else {
 			System.out.println("Error should not be recieving messages of this type");

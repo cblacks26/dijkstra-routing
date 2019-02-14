@@ -27,7 +27,6 @@ public class TCPRecieverThread implements Runnable{
 				dataLength = din.readInt();
 				byte[] data = new byte[dataLength];
 				din.readFully(data,0,dataLength);
-				System.out.println("Creating Event");
 				Event event = EventFactory.create(dataLength,data);
 				conn.getParentNode().onEvent(event,conn);
 			} catch(SocketException se) {

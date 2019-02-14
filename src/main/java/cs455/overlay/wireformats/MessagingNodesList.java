@@ -12,7 +12,6 @@ public class MessagingNodesList extends Event{
 	
 	public MessagingNodesList(byte[] data) throws IOException {
 		super(data);
-		System.out.println("Node decoding");
 		this.numberOfNodes = dis.readInt();
 		this.nodes = new String[numberOfNodes];
 		byte[] buff = new byte[data.length];

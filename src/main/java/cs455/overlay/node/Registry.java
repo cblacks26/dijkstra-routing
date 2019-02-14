@@ -50,13 +50,9 @@ public class Registry implements Node{
 		registry.running = true;
 		Scanner input = new Scanner(System.in);
 		while(registry.running) {
-			System.out.print("Command type help for list of commands: ");
 			if(input.hasNextLine()) {
 				String command = input.nextLine().trim();
-				if(command.equalsIgnoreCase("quit")) {
-					registry.running = false;
-					System.out.println("Stopping");
-				} else if(command.equalsIgnoreCase("list-messaging-nodes")){
+				if(command.equalsIgnoreCase("list-messaging-nodes")){
 					for(String node:registry.nodes) {
 						System.out.println(node);
 					}
@@ -78,7 +74,24 @@ public class Registry implements Node{
 						}
 					}
 					registry.setupOverlay();
-				} else {
+				}else if(command.equalsIgnoreCase("send-overlay-link-weights")){
+					if(registry.overlay==null) {
+						System.out.println("Overlay must be setup to list the weights");
+					}else {
+						registry.sendOverlay();
+						System.out.println("Sent Overlay");
+					}
+				} else if(command.contains("start")){
+					if(Character.isDigit(command.charAt(command.length()-1))&&command.contains(" ")) {
+						String[] split = command.split(" ");
+						try {
+							int rounds = Integer.parseInt(split[1]);
+							// start rounds
+						}catch(NumberFormatException ne) {
+							System.out.println("Cannot convert number-of-connections argument into integer");
+						}
+					}
+				}else {
 					System.out.println("Command Not recognized");
 				}
 			}
@@ -150,12 +163,10 @@ public class Registry implements Node{
 			System.out.println("Error must have atleast "+numConns +" to setup the overlay");
 		}else {
 			this.overlay = new Overlay(nodes, numConns);
-			System.out.println("Created overlay");
+			System.out.println(overlay.toString());
 			try {
 				sendLinkCommand();
 				System.out.println("Sent Link Command");
-				sendOverlay();
-				System.out.println("Sent Overlay");
 			}catch(IOException ioe) {
 				System.out.println("Error sending messaging nodes list or Overlay "+ioe.getMessage());
 				System.exit(1);
@@ -175,20 +186,24 @@ public class Registry implements Node{
 			}
 			if(numLinks>0) {
 				links.trim();
-				connections.get(node).sendData(LinkWeights.createMessage(links, numLinks));
+				connections.get(node).sendData(MessagingNodesList.createMessage(links, numLinks));
 			}
 		}
 	}
 	
-	private void sendOverlay() throws IOException {
+	private void sendOverlay(){
 		String links = "";
 		for(WeightedConnection wc:overlay.getLinks()) {
 			links+=wc.getFirstNode()+","+wc.getSecondNode()+","+wc.getWeight()+" ";
 		}
 		links.trim();
-		byte[] bytes = MessagingNodesList.createMessage(links, overlay.getLinks().size());
-		for(TCPConnection con:connections.values()) {
-			con.sendData(bytes);
+		try {
+			byte[] bytes = LinkWeights.createMessage(links, overlay.getLinks().size());
+			for(TCPConnection con:connections.values()) {
+				con.sendData(bytes);
+			}
+		}catch(IOException ioe) {
+			System.out.println("Error sending messaging Nodes List: "+ioe.getMessage());
 		}
 	}
 }

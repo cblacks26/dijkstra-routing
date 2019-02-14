@@ -12,7 +12,6 @@ public class LinkWeights extends Event{
 	
 	public LinkWeights(byte[] data) throws IOException {
 		super(data);
-		
 		this.numberOfLinks = dis.readInt();
 		this.links = new String[numberOfLinks];
 		byte[] buff = new byte[data.length];

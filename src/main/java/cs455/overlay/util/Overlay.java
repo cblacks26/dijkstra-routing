@@ -14,15 +14,6 @@ public class Overlay {
 		setup(nodes,numberConnections);
 	}
 	
-	public Overlay(String[] links) {
-		this.graph = new HashMap<String,Integer>();
-		this.conns = new ArrayList<WeightedConnection>();
-		for(String link:links) {
-			String[] parts = link.split(",");
-			conns.add(new WeightedConnection(parts[0],parts[1],Integer.parseInt(parts[2])));
-		}
-	}
-	
 	public void setup(ArrayList<String> nodes, int numberConnections) {
 		for(String node:nodes) {
 			graph.put(node,0);
@@ -39,8 +30,8 @@ public class Overlay {
 				}
 				WeightedConnection wc = new WeightedConnection(node,newCon);
 				conns.add(wc);
-				graph.replace(node, graph.get(node));
-				graph.replace(newCon, graph.get(newCon));
+				graph.replace(node, graph.get(node)+1);
+				graph.replace(newCon, graph.get(newCon)+1);
 			}
 		}
 	}
@@ -63,5 +54,13 @@ public class Overlay {
 	
 	public ArrayList<WeightedConnection> getLinks(){
 		return conns;
+	}
+	
+	public String toString() {
+		String result = "";
+		for(WeightedConnection wc:conns) {
+			result+=wc+"\n";
+		}
+		return result;
 	}
 }
