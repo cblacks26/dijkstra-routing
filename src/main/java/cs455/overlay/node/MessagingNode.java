@@ -4,7 +4,6 @@ import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 
@@ -28,6 +27,7 @@ public class MessagingNode implements Node{
 		this.registry = host+":"+port;
 		this.listener = null;
 		this.overlay = null;
+		createSocket(this,host,port);
 		try {
 			this.listener = new ServerSocketListener(this);
 			Thread thread = new Thread(listener);
@@ -49,8 +49,6 @@ public class MessagingNode implements Node{
 			
 		}
 		MessagingNode node = new MessagingNode(host,port);
-		node.createSocket(node,host,port);
-		node.register();
 	}
 	
 	private void createSocket(Node node, String host, int port) {
@@ -58,21 +56,26 @@ public class MessagingNode implements Node{
 		conns.put(host+":"+port, conn);
 	}
 	
-	private void register() throws IOException {
-		byte[] marshalBytes = null;
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		DataOutputStream dataOut = new DataOutputStream(new BufferedOutputStream(baos));
+	private void register(){
 		int type = 1;
 		byte[] ip = listener.getAddress().getBytes();
 		int port = listener.getPort();
-		dataOut.writeInt(type);
-		dataOut.write(ip);
-		dataOut.writeInt(port);
-		dataOut.flush();
-		marshalBytes = baos.toByteArray();
-		dataOut.close();
-		baos.close();
-		conns.get(registry).sendData(marshalBytes);
+		byte[] marshalBytes = null;
+		try {
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			DataOutputStream dataOut = new DataOutputStream(new BufferedOutputStream(baos));
+			
+			dataOut.writeInt(type);
+			dataOut.write(ip);
+			dataOut.writeInt(port);
+			dataOut.flush();
+			marshalBytes = baos.toByteArray();
+			dataOut.close();
+			baos.close();
+			conns.get(registry).sendData(marshalBytes);
+		}catch(IOException ioe) {
+			System.out.println("Error sending register message to registry: "+ioe.getMessage());
+		}
 	}
 	
 	@Override
@@ -108,13 +111,12 @@ public class MessagingNode implements Node{
 
 	@Override
 	public void onConnection(TCPConnection connection) {
-		
+		conns.put(connection.getIPAddress()+":"+connection.getListeningPort(),connection);
 	}
 
 	@Override
-	public void onListening(int port) {
-		// TODO Auto-generated method stub
-		
+	public void onListening(int port){
+		register();
 	}
 
 	@Override

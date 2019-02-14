@@ -56,7 +56,6 @@ public class ServerSocketListener implements Runnable{
 		while(isListening) {
 			try {
 				Socket inSocket = serverSocket.accept();
-				
 				TCPConnection connection = new TCPConnection(parent,inSocket);
 				parent.onConnection(connection);
 			}catch(IOException ie) {
