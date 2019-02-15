@@ -12,7 +12,6 @@ public class EventFactory{
 		DataInputStream dis = new DataInputStream(new BufferedInputStream(bais));
 		int type = dis.readInt();
 		Event event = null;
-		System.out.println("Recieved Event");
 		if(type == 1) {
 			event = new Register(bytes);
 		}else if (type == 2) {

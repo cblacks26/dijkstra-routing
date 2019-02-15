@@ -50,7 +50,6 @@ public class MessagingNode implements Node{
 		}else {
 			host = args[0];
 			port = Integer.parseInt(args[1]);
-			
 		}
 		MessagingNode node = new MessagingNode(host,port);
 		Scanner input = new Scanner(System.in);
@@ -89,13 +88,13 @@ public class MessagingNode implements Node{
 				System.out.println("Register successful");
 			// FAILURE
 			}else {
-				System.out.println("error");
+				System.out.println("Register failure");
 				System.out.println(regRes.getExtraInfo());
 				System.exit(1);
 			}
 		} else if(e.getType() == 4) {
 			MessagingNodesList mnl = (MessagingNodesList)e;
-			System.out.println("Recieved MessagingNodesList");
+			System.out.println("Recieved Messaging Nodes List");
 			for(String node:mnl.getNodes()) {
 				String[] info = node.split(":");
 				createSocket(this,info[0],Integer.parseInt(info[1]));

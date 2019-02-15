@@ -78,7 +78,7 @@ public class Registry implements Node{
 					if(registry.overlay==null) {
 						System.out.println("Overlay must be setup to list the weights");
 					}else {
-						registry.sendOverlay();
+						registry.sendOverlayToAllNodes();
 						System.out.println("Sent Overlay");
 					}
 				} else if(command.contains("start")){
@@ -133,7 +133,7 @@ public class Registry implements Node{
 		// Register Event
 		if(e.getType()==1) {
 			Register regReq = (Register) e;
-			String key = regReq.getIPAddress()+":"+regReq.getNodePort();
+			String key = connection.getIPAddress()+":"+regReq.getNodePort();
 			System.out.println("Recieved a Register Request from "+key);
 			if(nodes.contains(key)) {
 				registerResponse(0,"Error Host with that port is already registered",connection);
@@ -176,22 +176,25 @@ public class Registry implements Node{
 	
 	private void sendLinkCommand() throws IOException {
 		for(String node:connections.keySet()) {
+			String host = node.substring(0,node.indexOf(":"));
 			int numLinks = 0;
 			String links = "";
 			for(WeightedConnection wc:overlay.getLinks()) {
-				if(wc.getFirstNode().equalsIgnoreCase(node)) {
+				String firstHost = node.substring(0,wc.getFirstNode().indexOf(":"));
+				if(host.equalsIgnoreCase(firstHost)) {
 					numLinks++;
 					links+=wc.getSecondNode()+" ";
 				}
 			}
 			if(numLinks>0) {
 				links.trim();
+				System.out.println(node+": "+links);
 				connections.get(node).sendData(MessagingNodesList.createMessage(links, numLinks));
 			}
 		}
 	}
 	
-	private void sendOverlay(){
+	private void sendOverlayToAllNodes(){
 		String links = "";
 		for(WeightedConnection wc:overlay.getLinks()) {
 			links+=wc.getFirstNode()+","+wc.getSecondNode()+","+wc.getWeight()+" ";
