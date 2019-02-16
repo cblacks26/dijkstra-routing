@@ -4,38 +4,32 @@ import java.util.Random;
 
 public class WeightedConnection {
 
-	private String nodeA;
-	private String nodeB;
+	private OverlayNode nodeA;
+	private OverlayNode nodeB;
 	private int weight;
 	
-	public WeightedConnection(String nodeA, String nodeB) {
+	public WeightedConnection(OverlayNode nodeA, OverlayNode nodeB) {
 		this.nodeA = nodeA;
 		this.nodeB = nodeB;
 		Random rand = new Random();
 		this.weight = rand.nextInt(10)+1;
 	}
 	
-	public WeightedConnection(String nodeA, String nodeB, int weight) {
-		this.nodeA = nodeA;
-		this.nodeB = nodeB;
-		this.weight = weight;
-	}
-	
 	public int getWeight() {
 		return weight;
 	}
 	
-	public String getFirstNode() {
+	public OverlayNode getFirstNode() {
 		return nodeA;
 	}
 	
-	public String getSecondNode() {
+	public OverlayNode getSecondNode() {
 		return nodeB;
 	}
 	
 	@Override
 	public String toString() {
-		return getFirstNode()+" "+getSecondNode()+" "+getWeight();
+		return getFirstNode()+","+getSecondNode()+","+getWeight();
 	}
 	
 	public boolean equals(Object o) {
@@ -46,8 +40,8 @@ public class WeightedConnection {
 	}
 	
 	public boolean equals(WeightedConnection wc) {
-		if(wc.getFirstNode().equalsIgnoreCase(getFirstNode())) {
-			if(wc.getSecondNode().equalsIgnoreCase(getSecondNode())) return true;
+		if(wc.getFirstNode().toString().equalsIgnoreCase(getFirstNode().toString())) {
+			if(wc.getSecondNode().toString().equalsIgnoreCase(getSecondNode().toString())) return true;
 		}
 		return false;
 	}

@@ -18,7 +18,7 @@ public class LinkWeights extends Event{
 		dis.readFully(buff,0,data.length-8);
 		close();
 		
-		String list = buff.toString();
+		String list = new String(buff).trim();
 		
 		links = list.split(" ");
 	}

@@ -9,6 +9,7 @@ import java.util.Scanner;
 import cs455.overlay.transport.ServerSocketListener;
 import cs455.overlay.transport.TCPConnection;
 import cs455.overlay.util.Overlay;
+import cs455.overlay.util.OverlayNode;
 import cs455.overlay.util.WeightedConnection;
 import cs455.overlay.wireformats.Event;
 import cs455.overlay.wireformats.LinkWeights;
@@ -19,17 +20,15 @@ import cs455.overlay.wireformats.RegisterResponse;
 public class Registry implements Node{
 
 	private static final Registry mainRegistry = null;
-	private ArrayList<String> nodes;
+	private ArrayList<OverlayNode> nodes;
 	private Overlay overlay = null;
 	private int numConns = 4;
 	private ServerSocketListener socketListener = null;
-	private HashMap<String,TCPConnection> connections;
 	private volatile boolean running;
 	
 	public Registry(int port) {
-		this.nodes = new ArrayList<String>();
+		this.nodes = new ArrayList<OverlayNode>();
 		this.running = false;
-		this.connections = new HashMap<String,TCPConnection>();
 		try {
 			this.socketListener = new ServerSocketListener(this,port);
 			Thread newListener = new Thread(socketListener);
@@ -37,6 +36,10 @@ public class Registry implements Node{
 		}catch(UnknownHostException uhe) {
 			System.out.println(uhe.getMessage());
 		}
+	}
+	
+	public ArrayList<OverlayNode> getNodes(){
+		return nodes;
 	}
 	
 	public static void main(String[] args) throws UnknownHostException {
@@ -53,7 +56,7 @@ public class Registry implements Node{
 			if(input.hasNextLine()) {
 				String command = input.nextLine().trim();
 				if(command.equalsIgnoreCase("list-messaging-nodes")){
-					for(String node:registry.nodes) {
+					for(OverlayNode node:registry.getNodes()) {
 						System.out.println(node);
 					}
 				} else if(command.equalsIgnoreCase("list-weights")){
@@ -117,15 +120,11 @@ public class Registry implements Node{
 	}
 	
 	public void onConnection(TCPConnection connection) {
-		String ip = connection.getIPAddress();
-		int port = connection.getListeningPort();
-		connections.put(ip+":"+port, connection);
+		// do nothing
 	}
 	
 	public void closeConnections() {
-		for(TCPConnection conn:connections.values()) {
-			conn.closeConnection();
-		}
+		// unimplemented method
 	}
 	
 	@Override
@@ -133,12 +132,11 @@ public class Registry implements Node{
 		// Register Event
 		if(e.getType()==1) {
 			Register regReq = (Register) e;
-			String key = connection.getIPAddress()+":"+regReq.getNodePort();
-			System.out.println("Recieved a Register Request from "+key);
-			if(nodes.contains(key)) {
+			OverlayNode node = new OverlayNode(regReq.getIPAddress(),regReq.getNodePort(),connection);
+			if(nodes.contains(node)) {
 				registerResponse(0,"Error Host with that port is already registered",connection);
 			}else {
-				nodes.add(key);
+				nodes.add(node);
 				registerResponse(1,"Added Node to Messaging node list",connection);
 			}
 		// DeRegister Event
@@ -175,35 +173,34 @@ public class Registry implements Node{
 	}
 	
 	private void sendLinkCommand() throws IOException {
-		for(String node:connections.keySet()) {
-			String host = node.substring(0,node.indexOf(":"));
-			int numLinks = 0;
-			String links = "";
-			for(WeightedConnection wc:overlay.getLinks()) {
-				String firstHost = node.substring(0,wc.getFirstNode().indexOf(":"));
-				if(host.equalsIgnoreCase(firstHost)) {
-					numLinks++;
-					links+=wc.getSecondNode()+" ";
-				}
+		HashMap<OverlayNode,String> messages = new HashMap<OverlayNode,String>();
+		for(WeightedConnection wc:overlay.getLinks()) {
+			if(messages.containsKey(wc.getFirstNode())) {
+				messages.replace(wc.getFirstNode(), messages.get(wc.getFirstNode())+" "+wc.getSecondNode());
+			}else {
+				messages.put(wc.getFirstNode(), wc.getSecondNode().toString());
 			}
-			if(numLinks>0) {
-				links.trim();
-				System.out.println(node+": "+links);
-				connections.get(node).sendData(MessagingNodesList.createMessage(links, numLinks));
-			}
+		}
+		for(OverlayNode node:messages.keySet()) {
+			String message = messages.get(node);
+			System.out.println(message);
+			message.trim();
+			int count = message.split(" ").length;
+			byte[] bytes = MessagingNodesList.createMessage(messages.get(node), count);
+			node.getConnection().sendData(bytes);
 		}
 	}
 	
 	private void sendOverlayToAllNodes(){
 		String links = "";
 		for(WeightedConnection wc:overlay.getLinks()) {
-			links+=wc.getFirstNode()+","+wc.getSecondNode()+","+wc.getWeight()+" ";
+			links+=wc.toString()+" ";
 		}
 		links.trim();
 		try {
 			byte[] bytes = LinkWeights.createMessage(links, overlay.getLinks().size());
-			for(TCPConnection con:connections.values()) {
-				con.sendData(bytes);
+			for(OverlayNode node:nodes) {
+				node.getConnection().sendData(bytes);
 			}
 		}catch(IOException ioe) {
 			System.out.println("Error sending messaging Nodes List: "+ioe.getMessage());

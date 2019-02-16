@@ -1,8 +1,5 @@
 package cs455.overlay.node;
 
-import java.io.BufferedOutputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.HashMap;
@@ -10,7 +7,6 @@ import java.util.Scanner;
 
 import cs455.overlay.transport.ServerSocketListener;
 import cs455.overlay.transport.TCPConnection;
-import cs455.overlay.util.Overlay;
 import cs455.overlay.util.Router;
 import cs455.overlay.wireformats.Event;
 import cs455.overlay.wireformats.LinkWeights;
@@ -23,6 +19,7 @@ public class MessagingNode implements Node{
 	private String registry;
 	private HashMap<String,TCPConnection> conns;
 	private ServerSocketListener listener;
+	private int port;
 	private Router router;
 	private volatile boolean running = true;
 	
@@ -59,6 +56,10 @@ public class MessagingNode implements Node{
 				if(command.equalsIgnoreCase("quit-overlay")) {
 					node.running = false;
 					System.out.println("Stopping");
+				}else if(command.equalsIgnoreCase("print-shortest-path")) {
+					System.out.print(node.router.getShortestPaths());
+				}else {
+					System.out.println("Command not recognized");
 				}
 			}
 		}
@@ -71,7 +72,7 @@ public class MessagingNode implements Node{
 	
 	private void register(){
 		try {
-			conns.get(registry).sendData(Register.createMessage(listener.getAddress(), listener.getPort()));
+			conns.get(registry).sendData(Register.createMessage(listener.getAddress(), port));
 		}catch(IOException ioe) {
 			System.out.println("Error sending register message to registry: "+ioe.getMessage());
 		}
@@ -85,24 +86,23 @@ public class MessagingNode implements Node{
 			// SUCCESS
 			if(regRes.getResult()==1) {
 				listener = new ServerSocketListener(this);
-				System.out.println("Register successful");
 			// FAILURE
 			}else {
-				System.out.println("Register failure");
 				System.out.println(regRes.getExtraInfo());
 				System.exit(1);
 			}
 		} else if(e.getType() == 4) {
 			MessagingNodesList mnl = (MessagingNodesList)e;
-			System.out.println("Recieved Messaging Nodes List");
 			for(String node:mnl.getNodes()) {
 				String[] info = node.split(":");
 				createSocket(this,info[0],Integer.parseInt(info[1]));
 			}
 			System.out.println("All connections are established. Number of connections: "+mnl.getNumberOfNodes());
+			System.out.println("Listening on port "+port);
 		}else if(e.getType() == 5) {
 			LinkWeights lw = (LinkWeights)e;
-			this.router = new Router(listener.getAddress()+":"+listener.getPort(),lw.getLinks());
+			System.out.println("MessgingNode Listening on port "+port);
+			this.router = new Router(listener.getAddress()+":"+port,lw.getLinks());
 			System.out.println("Link weights are received and processed. Ready to send messages.");
 		}else {
 			System.out.println("Error should not be recieving messages of this type");
@@ -116,6 +116,7 @@ public class MessagingNode implements Node{
 
 	@Override
 	public void onListening(int port){
+		this.port = port;
 		register();
 	}
 
