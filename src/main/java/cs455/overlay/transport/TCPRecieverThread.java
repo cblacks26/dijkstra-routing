@@ -28,9 +28,7 @@ public class TCPRecieverThread implements Runnable{
 				byte[] data = new byte[dataLength];
 				din.readFully(data,0,dataLength);
 				Event event = EventFactory.create(dataLength,data);
-				System.out.println("Event is "+event.getType());
 				conn.getParentNode().onEvent(event,conn);
-				System.out.println("Called OnEvent");
 			} catch(SocketException se) {
 				System.out.println("SError in Reciever Thread: "+se.getMessage());
 				break;

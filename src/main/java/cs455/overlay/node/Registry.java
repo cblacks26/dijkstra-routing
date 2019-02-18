@@ -151,6 +151,18 @@ public class Registry implements Node{
 		}
 	}
 	
+	// helper and tester method
+	private boolean findAndRemove(OverlayNode on) {
+		for(OverlayNode n:nodes) {
+			System.out.println(n);
+			if(n.equals(on)) {
+				nodes.remove(n);
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	@Override
 	public void onEvent(Event e, TCPConnection connection) throws IOException {
 		// Register Event
@@ -166,12 +178,12 @@ public class Registry implements Node{
 		// DeRegister Event
 		}else if(e.getType()==3) {
 			Deregister de = (Deregister)e;
-			stringEquals(connection.getIPAddress(),de.getIPAddress());
-			System.out.println(connection.getIPAddress()+"  -  "+de.getIPAddress());
+			// stringEquals(connection.getIPAddress(),de.getIPAddress());
+			// System.out.println(connection.getIPAddress()+"  "+connection.getIPAddress().length()+" -  "+de.getIPAddress()+" "+de.getIPAddress().length());
 			if(connection.getIPAddress().equalsIgnoreCase(de.getIPAddress())) {
 				OverlayNode on = new OverlayNode(de.getIPAddress(),de.getNodePort(),connection);
-				if(getNodes().contains(on)) {
-					getNodes().remove(on);
+				boolean result = findAndRemove(on);
+				if(result) {
 					connection.sendData(DeregisterResponse.createMessage("Removed from overlay", 1));
 				}else {
 					connection.sendData(DeregisterResponse.createMessage("Node not found in overlay", 0));

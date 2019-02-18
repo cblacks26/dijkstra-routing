@@ -12,13 +12,14 @@ public class TCPConnection {
 	private TCPRecieverThread listener;
 	private TCPSender sender;
 	private String address;
+	private Thread listenerThread;
 	
 	public TCPConnection(Node node, Socket socket) throws IOException {
 		this.parent = node;
 		this.socket = socket;
 		listener = new TCPRecieverThread(this, socket);
 		sender = new TCPSender(socket);
-		Thread listenerThread = new Thread(listener);
+		listenerThread = new Thread(listener);
 		listenerThread.start();
 		this.address = socket.getInetAddress().getHostAddress().replaceAll("[\\p{Cntrl}&&[^\r\n\t]]", "").trim();
 	}
@@ -57,6 +58,7 @@ public class TCPConnection {
 		try {
 			sender.close();
 			listener.finish();
+			System.exit(0);
 		}catch(IOException ie) {
 			System.out.println("Error closing connection: "+ie.getMessage());
 		}

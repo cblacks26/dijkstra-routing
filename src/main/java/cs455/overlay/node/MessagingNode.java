@@ -158,6 +158,10 @@ public class MessagingNode implements Node{
 			if(dr.getResult()==1) {
 				System.out.println(dr.getExtraInfo());
 				this.running = false;
+				for(TCPConnection con:conns.values()) {
+					con.closeConnection();
+				}
+				System.exit(0);
 			}else {
 				System.out.println(dr.getExtraInfo());
 			}
