@@ -56,9 +56,15 @@ public class Router {
 	
 	public void createPaths() {
 		for(RouterNode n:node.getNodes().keySet()) {
-			for(String address:nodes.keySet()) {
-				Route path = node.pathToNode(address, node.getNodes().get(n));
-				paths.put(address,path);
+			for(String addr:nodes.keySet()) {
+				Route path = node.pathToNode(addr, node.getNodes().get(n));
+				if(path!=null) {
+					if(paths.containsKey(addr)) {
+						if(paths.get(addr).getTotalWeight()>path.getTotalWeight()) paths.replace(addr,path);
+					}else {
+						paths.put(addr, path);
+					}
+				}
 				resetVisitedNodes();
 			}
 		}

@@ -15,28 +15,30 @@ public class RouterNode {
 		this.nodes = new HashMap<RouterNode,Integer>();
 	}
 	
-	public Route pathToNode(String address, int weight) {
-		visit();
-		ArrayList<Route> routes = new ArrayList<Route>();
-		for(RouterNode node:nodes.keySet()) {
-			if(node.getNodeAddress().equalsIgnoreCase(address)) {
-				System.out.println(this.address+" found path to "+address);
-				return new Route(this,weight);
-			}else if(node.hasBeenVisited()) return new Route(this,-1);
-			else routes.add(node.pathToNode(address,nodes.get(node)));
-		}
-		Route best = null;
-		for(Route route:routes) {
-			if(best==null) {
-				best = route;
-			}else if(route.getTotalWeight()<0) {
-				// Route not found
-			}else if(best.getTotalWeight()>route.getTotalWeight()) {
-				best = route;
+	public Route pathToNode(String destination, int weight) {
+		if(address.equalsIgnoreCase(destination)) {
+			return new Route(this,weight);
+		}else if(hasBeenVisited()) {
+			return null;
+		}else {
+			visit();
+			ArrayList<Route> routes = new ArrayList<Route>();
+			for(RouterNode node:nodes.keySet()) {
+				routes.add(node.pathToNode(address,nodes.get(node)));
 			}
+			Route best = null;
+			for(Route route:routes) {
+				if(route!=null) {
+					if(best==null&&route!=null) {
+						best = route;
+					}else if(best.getTotalWeight()>route.getTotalWeight()) {
+						best = route;
+					}
+				}
+			}
+			if(best!=null) best.addNodeToRoute(this, weight);
+			return best;
 		}
-		best.addNodeToRoute(this, weight);
-		return best;
 	}
 	
 	public HashMap<RouterNode,Integer> getNodes(){
