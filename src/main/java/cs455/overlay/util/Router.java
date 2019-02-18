@@ -1,5 +1,6 @@
 package cs455.overlay.util;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map.Entry;
@@ -8,6 +9,7 @@ import java.util.Random;
 public class Router {
 
 	private RouterNode node;
+	private ArrayList<String> places;
 	private HashMap<String,RouterNode> nodes;
 	private HashMap<String,Route> paths;
 	
@@ -53,11 +55,14 @@ public class Router {
 	}
 	
 	public void createPaths() {
-		for(String address:nodes.keySet()) {
-			Route path = node.pathToNode(address, 0);
-			paths.put(address,path);
-			resetVisitedNodes();
+		for(RouterNode n:node.getNodes().keySet()) {
+			for(String address:nodes.keySet()) {
+				Route path = node.pathToNode(address, node.getNodes().get(n));
+				paths.put(address,path);
+				resetVisitedNodes();
+			}
 		}
+		
 	}
 
 	public Route getRandomPath() {
