@@ -5,6 +5,7 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Scanner;
+import java.util.concurrent.TimeUnit;
 
 import cs455.overlay.transport.ServerSocketListener;
 import cs455.overlay.transport.TCPConnection;
@@ -20,12 +21,16 @@ import cs455.overlay.wireformats.PullTaskSummary;
 import cs455.overlay.wireformats.Register;
 import cs455.overlay.wireformats.RegisterResponse;
 import cs455.overlay.wireformats.TaskComplete;
+import cs455.overlay.wireformats.TaskInitiate;
 import cs455.overlay.wireformats.TaskSummary;
 
 public class Registry implements Node{
 
 	private static final Registry mainRegistry = null;
 	private ArrayList<OverlayNode> nodes;
+	private ArrayList<TaskSummary> summaries;
+	private int port;
+	private String address;
 	private Overlay overlay = null;
 	private int numConns = 4;
 	private ServerSocketListener socketListener = null;
@@ -33,6 +38,7 @@ public class Registry implements Node{
 	
 	public Registry(int port) {
 		this.nodes = new ArrayList<OverlayNode>();
+		this.summaries = new ArrayList<TaskSummary>();
 		this.running = false;
 		try {
 			this.socketListener = new ServerSocketListener(this,port);
@@ -95,6 +101,7 @@ public class Registry implements Node{
 						try {
 							int rounds = Integer.parseInt(split[1]);
 							// start rounds
+							registry.sendTaskInitiate(rounds);
 						}catch(NumberFormatException ne) {
 							System.out.println("Cannot convert number-of-connections argument into integer");
 						}
@@ -121,6 +128,8 @@ public class Registry implements Node{
 	}
 	
 	public void onListening(int port) {
+		this.port = port;
+		this.address = this.socketListener.getAddress().replaceAll("[\\p{Cntrl}&&[^\r\n\t]]", "").trim();
 		System.out.println("Listening to port "+port);
 	}
 	
@@ -130,6 +139,16 @@ public class Registry implements Node{
 	
 	public void closeConnections() {
 		// unimplemented method
+	}
+	
+	//tester method
+	private boolean stringEquals(String s, String s2) {
+		if(s.length()!=s2.length()) {
+			System.out.println("Lengths not equal: "+s.length()+" - "+s2.length());
+			return false;
+		}else {
+			return s.equals(s2);
+		}
 	}
 	
 	@Override
@@ -147,6 +166,8 @@ public class Registry implements Node{
 		// DeRegister Event
 		}else if(e.getType()==3) {
 			Deregister de = (Deregister)e;
+			stringEquals(connection.getIPAddress(),de.getIPAddress());
+			System.out.println(connection.getIPAddress()+"  -  "+de.getIPAddress());
 			if(connection.getIPAddress().equalsIgnoreCase(de.getIPAddress())) {
 				OverlayNode on = new OverlayNode(de.getIPAddress(),de.getNodePort(),connection);
 				if(getNodes().contains(on)) {
@@ -160,11 +181,20 @@ public class Registry implements Node{
 			}
 		}else if(e.getType()==7) {
 			TaskComplete tc = (TaskComplete)e;
+			try {
+				TimeUnit.SECONDS.sleep(15);
+			} catch (InterruptedException e1) {
+				e1.printStackTrace();
+			};
 			// wait for 15 seconds
 			byte[] message = PullTaskSummary.createMessage();
 			connection.sendData(message);
 		}else if(e.getType()==9) {
 			TaskSummary ts = (TaskSummary)e;
+			summaries.add(ts);
+			if(summaries.size()==nodes.size()) {
+				printSummary();
+			}
 		}else {
 			System.out.println("Error should not be recieving messages of this type");
 		}
@@ -225,5 +255,33 @@ public class Registry implements Node{
 		}catch(IOException ioe) {
 			System.out.println("Error sending messaging Nodes List: "+ioe.getMessage());
 		}
+	}
+	
+	private void sendTaskInitiate(int numberOfRounds) {
+		byte[] data = null;
+		try {
+			data = TaskInitiate.createMessage(numberOfRounds);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		for(OverlayNode on:nodes) {
+			on.getConnection().sendData(data);
+		}
+	}
+	
+	private void printSummary() {
+		System.out.println("Node\t | Number Messages Sent | Number Messages Recieved | Summation Sent Messgage | Summation Recieved Messages | Number Relayed Messages");
+		for(TaskSummary ts:summaries) {
+			System.out.println(getSummary(ts));
+		}
+	}
+	
+	private String getSummary(TaskSummary ts) {
+		String row = ts.getIpAddress()+":"+ts.getPort()+" | ";
+		row+=ts.getNumberSentMessages()+" | "+ts.getNumberRecievedMessages()+" | ";
+		row+=ts.getSummationSentMessages()+" | "+ts.getSummationRecievedMessages()+" | ";
+		row+=ts.getNumberRelayedMessages();
+		return row;
 	}
 }

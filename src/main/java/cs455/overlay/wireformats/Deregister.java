@@ -16,7 +16,7 @@ public class Deregister extends Event{
 		// read bytes minus an integer for the port
 		byte[] buff = new byte[data.length];
 		dis.readFully(buff,0,data.length-8);
-		ipAddress = new String(buff);
+		ipAddress = new String(buff).replaceAll("[\\p{Cntrl}&&[^\r\n\t]]", "").trim();
 		port = dis.readInt();
 		close();
 	}
@@ -33,7 +33,7 @@ public class Deregister extends Event{
 		byte[] marshalBytes = null;
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		DataOutputStream dataOut = new DataOutputStream(new BufferedOutputStream(baos));
-		dataOut.writeInt(1);
+		dataOut.writeInt(3);
 		dataOut.write(ip.getBytes());
 		dataOut.writeInt(port);
 		dataOut.flush();

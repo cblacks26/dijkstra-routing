@@ -18,6 +18,7 @@ import cs455.overlay.wireformats.MessagingNodesList;
 import cs455.overlay.wireformats.PullTaskSummary;
 import cs455.overlay.wireformats.Register;
 import cs455.overlay.wireformats.RegisterResponse;
+import cs455.overlay.wireformats.TaskComplete;
 import cs455.overlay.wireformats.TaskInitiate;
 import cs455.overlay.wireformats.TaskSummary;
 
@@ -25,6 +26,7 @@ public class MessagingNode implements Node{
 
 	private String registry;
 	private String node;
+	private String address;
 	private HashMap<String,TCPConnection> conns;
 	private ServerSocketListener listener;
 	private int port;
@@ -86,7 +88,7 @@ public class MessagingNode implements Node{
 	
 	private void deregister() {
 		try {
-			conns.get(registry).sendData(Deregister.createMessage(listener.getAddress(), port));
+			conns.get(registry).sendData(Deregister.createMessage(address, port));
 		}catch(IOException ioe) {
 			System.out.println("Error sending deregister message to registry: "+ioe.getMessage());
 		}
@@ -94,7 +96,7 @@ public class MessagingNode implements Node{
 	
 	private void register(){
 		try {
-			conns.get(registry).sendData(Register.createMessage(listener.getAddress(), port));
+			conns.get(registry).sendData(Register.createMessage(address, port));
 		}catch(IOException ioe) {
 			System.out.println("Error sending register message to registry: "+ioe.getMessage());
 		}
@@ -127,14 +129,17 @@ public class MessagingNode implements Node{
 			this.router = new Router(node,lw.getLinks());
 			System.out.println("Link weights are received and processed. Ready to send messages.");
 		} else if(e.getType() == 6) {
+			System.out.println("Recieved TaskInitiate");
 			TaskInitiate ti = (TaskInitiate)e;
 			sendMessages(ti.getNumberOfRounds());
+			System.out.println("Passed send Messages");
 			// start sending messages
 		}else if(e.getType() == 8) {
 			PullTaskSummary pts = (PullTaskSummary)e;
-			conns.get(registry).sendData(TaskSummary.createMessage(listener.getAddress(), port, getAndResetNumberSent(), getAndResetSumSent(), 
+			conns.get(registry).sendData(TaskSummary.createMessage(address, port, getAndResetNumberSent(), getAndResetSumSent(), 
 					getAndResetNumberRecieved(), getAndResetSumRecieved(), getAndResetNumberRelayed()));
 		}else if(e.getType() == 10) {
+			System.out.println("Recieved Message");
 			Message m = (Message)e;
 			incrementNumberRecieved();
 			String[] links = m.getPath().split("-");
@@ -231,6 +236,11 @@ public class MessagingNode implements Node{
 			addSumSent(num);
 		}
 		setNumberSent(numberRounds);
+		try {
+			conns.get(registry).sendData(TaskComplete.createMessage(address, port));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	@Override
@@ -241,7 +251,8 @@ public class MessagingNode implements Node{
 	@Override
 	public void onListening(int port){
 		this.port = port;
-		this.node = (listener.getAddress()+":"+port).replaceAll("[\\p{Cntrl}&&[^\r\n\t]]", "").trim();
+		this.address = listener.getAddress().replaceAll("[\\p{Cntrl}&&[^\r\n\t]]", "").trim();
+		this.node = (address+":"+port);
 		register();
 	}
 

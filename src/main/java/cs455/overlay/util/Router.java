@@ -76,7 +76,7 @@ public class Router {
 	public String getShortestPaths() {
 		String out = "";
 		for(Route route:paths.values()) {
-			out+=route.printPath()+"/n";
+			out+=route.printPath()+"\n";
 		}
 		return out;
 	}

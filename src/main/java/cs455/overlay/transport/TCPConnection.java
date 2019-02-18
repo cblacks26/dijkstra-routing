@@ -11,6 +11,7 @@ public class TCPConnection {
 	private Socket socket;
 	private TCPRecieverThread listener;
 	private TCPSender sender;
+	private String address;
 	
 	public TCPConnection(Node node, Socket socket) throws IOException {
 		this.parent = node;
@@ -19,6 +20,7 @@ public class TCPConnection {
 		sender = new TCPSender(socket);
 		Thread listenerThread = new Thread(listener);
 		listenerThread.start();
+		this.address = socket.getInetAddress().getHostAddress().replaceAll("[\\p{Cntrl}&&[^\r\n\t]]", "").trim();
 	}
 	
 	public TCPConnection(Node node, String host, int port) {
@@ -48,7 +50,7 @@ public class TCPConnection {
 	}
 	
 	public String getIPAddress() {
-		return socket.getInetAddress().getHostAddress();
+		return address;
 	}
 	
 	public void closeConnection() {

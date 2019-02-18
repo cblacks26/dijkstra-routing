@@ -13,6 +13,7 @@ public class TaskInitiate extends Event{
 		super(data);
 		
 		this.numberRounds = dis.readInt();
+		System.out.println("Number of Rounds "+numberRounds);
 		close();
 	}
 
