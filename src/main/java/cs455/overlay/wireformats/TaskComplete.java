@@ -5,36 +5,37 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-public class Message extends Event{
+public class TaskComplete extends Event{
 
-	private String path;
-	private int number;
+	private String ipAddress;
+	private int port;
 	
-	public Message(byte[] data) throws IOException {
+	public TaskComplete(byte[] data) throws IOException {
 		super(data);
+		
 		// read bytes minus an integer for the port
 		byte[] buff = new byte[data.length];
 		dis.readFully(buff,0,data.length-8);
-		path = new String(buff);
-		number = dis.readInt();
+		ipAddress = new String(buff);
+		port = dis.readInt();
 		close();
 	}
-	
-	public int getNumber() {
-		return number;
+
+	public int getPort() {
+		return port;
 	}
 	
-	public String getPath() {
-		return path;
+	public String getIPAddress() {
+		return ipAddress;
 	}
 	
-	public static byte[] createMessage(String path, int number) throws IOException {
+	public static byte[] createMessage(String ip, int port) throws IOException {
 		byte[] marshalBytes = null;
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		DataOutputStream dataOut = new DataOutputStream(new BufferedOutputStream(baos));
-		dataOut.writeInt(10);
-		dataOut.write(path.getBytes());
-		dataOut.writeInt(number);
+		dataOut.writeInt(7);
+		dataOut.write(ip.getBytes());
+		dataOut.writeInt(port);
 		dataOut.flush();
 		marshalBytes = baos.toByteArray();
 		dataOut.close();

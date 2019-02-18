@@ -11,11 +11,16 @@ import cs455.overlay.transport.TCPConnection;
 import cs455.overlay.util.Overlay;
 import cs455.overlay.util.OverlayNode;
 import cs455.overlay.util.WeightedConnection;
+import cs455.overlay.wireformats.Deregister;
+import cs455.overlay.wireformats.DeregisterResponse;
 import cs455.overlay.wireformats.Event;
 import cs455.overlay.wireformats.LinkWeights;
 import cs455.overlay.wireformats.MessagingNodesList;
+import cs455.overlay.wireformats.PullTaskSummary;
 import cs455.overlay.wireformats.Register;
 import cs455.overlay.wireformats.RegisterResponse;
+import cs455.overlay.wireformats.TaskComplete;
+import cs455.overlay.wireformats.TaskSummary;
 
 public class Registry implements Node{
 
@@ -141,12 +146,27 @@ public class Registry implements Node{
 			}
 		// DeRegister Event
 		}else if(e.getType()==3) {
-			
-		// Message Event
-		}else if(e.getType()==4) {
-			
+			Deregister de = (Deregister)e;
+			if(connection.getIPAddress().equalsIgnoreCase(de.getIPAddress())) {
+				OverlayNode on = new OverlayNode(de.getIPAddress(),de.getNodePort(),connection);
+				if(getNodes().contains(on)) {
+					getNodes().remove(on);
+					connection.sendData(DeregisterResponse.createMessage("Removed from overlay", 1));
+				}else {
+					connection.sendData(DeregisterResponse.createMessage("Node not found in overlay", 0));
+				}
+			}else {
+				connection.sendData(DeregisterResponse.createMessage("Address does not match connection", 0));
+			}
+		}else if(e.getType()==7) {
+			TaskComplete tc = (TaskComplete)e;
+			// wait for 15 seconds
+			byte[] message = PullTaskSummary.createMessage();
+			connection.sendData(message);
+		}else if(e.getType()==9) {
+			TaskSummary ts = (TaskSummary)e;
 		}else {
-			
+			System.out.println("Error should not be recieving messages of this type");
 		}
 	}
 

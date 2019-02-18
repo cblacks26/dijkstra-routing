@@ -10,7 +10,7 @@ public abstract class Event {
 	private byte[] data;
 	protected ByteArrayInputStream bais;
 	protected DataInputStream dis;
-	private int type;
+	protected int type;
 	
 	public Event(byte[] data) throws IOException {
 		this.data = data;

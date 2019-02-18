@@ -1,7 +1,9 @@
 package cs455.overlay.util;
 
-import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map.Entry;
+import java.util.Random;
 
 public class Router {
 
@@ -57,9 +59,18 @@ public class Router {
 			resetVisitedNodes();
 		}
 	}
-	
-	public Route getPathToAddress(String address) {
-		return paths.get(address);
+
+	public Route getRandomPath() {
+		Random rand = new Random();
+		int count = rand.nextInt(paths.size());
+		Iterator<Entry<String,Route>> it = paths.entrySet().iterator();
+		Entry<String, Route> prev = (Entry<String,Route>)it.next();
+		Entry<String, Route> curr = (Entry<String,Route>)it.next();
+		while(count > 0) {
+			it.next();
+		}
+		if(curr.getKey().equalsIgnoreCase(node.getNodeAddress())) return prev.getValue();
+		else return curr.getValue();
 	}
 	
 	public String getShortestPaths() {

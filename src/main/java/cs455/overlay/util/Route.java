@@ -34,4 +34,12 @@ public class Route {
 		return result;
 	}
 	
+	public String toString() {
+		String result = "";
+		for(int i = path.size()-1; i > 0;i--) {
+			result+=path.get(i)+"-";
+		}
+		result+=path.get(0);
+		return result;
+	}
 }

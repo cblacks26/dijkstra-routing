@@ -22,6 +22,18 @@ public class EventFactory{
 			event = new MessagingNodesList(bytes);
 		}else if (type == 5) {
 			event = new LinkWeights(bytes);
+		}else if(type == 6){
+			event = new TaskInitiate(bytes);
+		}else if(type == 7){
+			event = new TaskComplete(bytes);
+		}else if(type == 8){
+			event = new PullTaskSummary(null);
+		}else if(type == 9){
+			event = new TaskSummary(bytes);
+		}else if(type == 10){
+			event = new Message(bytes);
+		}else if(type == 11){
+			event = new DeregisterResponse(bytes);
 		}else {
 			throw new Exception("Unrecognized Message Type");
 		}
