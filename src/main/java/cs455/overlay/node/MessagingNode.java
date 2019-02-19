@@ -72,7 +72,7 @@ public class MessagingNode implements Node{
 					node.deregister();
 					System.out.println("Sent deregister message");
 				}else if(command.equalsIgnoreCase("print-shortest-path")) {
-					System.out.print(node.router.getShortestPaths());
+					node.router.printShortestPaths();
 				}else {
 					System.out.println("Command not recognized");
 				}
@@ -232,11 +232,7 @@ public class MessagingNode implements Node{
 		Random rand = new Random();
 		for(int i = 0; i < numberRounds;i++) {
 			int num = rand.nextInt();
-			try {
-				conn.sendData(Message.createMessage(router.getRandomPath().toString(), num));
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+			
 			addSumSent(num);
 		}
 		setNumberSent(numberRounds);

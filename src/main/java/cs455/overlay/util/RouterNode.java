@@ -1,86 +1,66 @@
 package cs455.overlay.util;
 
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 
 public class RouterNode {
 	
 	private String address;
-	private boolean visited;
-	private HashMap<RouterNode,Integer> nodes;
+	private List<RouterNode> shortestPath = new LinkedList<>();
+	private List<Integer> pathWeights = new LinkedList<>();
+	private HashMap<RouterNode,Integer> adjacentNodes = new HashMap<>();
+	private int distance = Integer.MAX_VALUE;
 	
 	public RouterNode(String address) {
 		this.address = address;
-		this.visited = false;
-		this.nodes = new HashMap<RouterNode,Integer>();
 	}
-	
-	public Route pathToNode(String destination, int weight) {
-		if(address.equalsIgnoreCase(destination)) {
-			return new Route(this,weight);
-		}else if(hasBeenVisited()) {
-			return null;
-		}else {
-			visit();
-			ArrayList<Route> routes = new ArrayList<Route>();
-			for(RouterNode node:nodes.keySet()) {
-				routes.add(node.pathToNode(address,nodes.get(node)));
-			}
-			Route best = null;
-			for(Route route:routes) {
-				if(route!=null) {
-					if(best==null&&route!=null) {
-						best = route;
-					}else if(best.getTotalWeight()>route.getTotalWeight()) {
-						best = route;
-					}
-				}
-			}
-			if(best!=null) best.addNodeToRoute(this, weight);
-			return best;
-		}
-	}
-	
-	public HashMap<RouterNode,Integer> getNodes(){
-		return nodes;
-	}
-	
-	public void resetVisits() {
-		visited = false;
-	}
-	
-	public boolean hasBeenVisited() {
-		return visited;
-	}
-	
-	public void visit() {
-		visited = true;
-	}
-	
+
 	public String getNodeAddress() {
 		return address;
 	}
 	
-	public void addNode(RouterNode node, int weight) {
-		nodes.put(node, weight);
+	public void addAdjecentNodes(RouterNode node, int distance) {
+		adjacentNodes.put(node, distance);
 	}
 	
-	public boolean equals(Object o) {
-		if(o instanceof RouterNode) {
-			return equals((RouterNode)o);
-		}
-		return false;
+	public void addNodeToShortestPath(RouterNode node, int weight) {
+		shortestPath.add(node);
+		pathWeights.add(weight);
+		distance+=weight;
 	}
 	
-	public boolean equals(RouterNode node) {
-		return getNodeAddress().equalsIgnoreCase(node.getNodeAddress());
+	public int getDistance() {
+		return distance;
 	}
 	
-	public boolean equals(RouterNode node1, RouterNode node2) {
-		return node1.equals(node2);
+	public void setDistance(int dist) {
+		distance = dist;
 	}
 	
 	public String toString() {
-		return address;
+		String result = "";
+		for(int i = 0; i<shortestPath.size()-1;i++) {
+			result+=shortestPath.get(i)+"--"+pathWeights.get(i)+"--";
+		}
+		result+=shortestPath.get(shortestPath.size()-1);
+		return result;
+	}
+
+	public HashMap<RouterNode,Integer> getAdjacentNodes() {
+		return adjacentNodes;
+	}
+	
+	public List<RouterNode> getShortestPath(){
+		return shortestPath;
+	}
+	
+	public List<Integer> getShortestPathWeights(){
+		return pathWeights;
+	}
+	
+	public void setShortestPath(List<RouterNode> shortList, List<Integer> weightsList) {
+		this.shortestPath = shortList;
+		this.pathWeights = weightsList;
 	}
 }
