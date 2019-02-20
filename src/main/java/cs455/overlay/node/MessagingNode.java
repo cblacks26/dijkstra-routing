@@ -84,7 +84,8 @@ public class MessagingNode implements Node{
 	
 	private void createSocket(Node node, String host, int port) {
 		TCPConnection conn = new TCPConnection(node, host, port);
-		conns.put(host+":"+port, conn);
+		String addr = (conn.getIPAddress()+":"+conn.getListeningPort()).replaceAll("[\\p{Cntrl}&&[^\r\n\t]]", "").trim();
+		conns.put(addr, conn);
 	}
 	
 	private void deregister() {
