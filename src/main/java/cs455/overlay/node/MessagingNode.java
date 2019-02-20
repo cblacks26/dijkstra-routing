@@ -183,6 +183,7 @@ public class MessagingNode implements Node{
 	}
 	
 	private void addConnection(String host, int port, TCPConnection con) {
+		if(host==null) return;
 		String addr = (host+":"+port).replaceAll("[\\p{Cntrl}&&[^\r\n\t]]", "").trim();
 		System.out.println("Adding "+addr);
 		conns.put(addr, con);
@@ -190,9 +191,10 @@ public class MessagingNode implements Node{
 	
 	// tester method
 	private TCPConnection findConnection(String addr) {
+		String ad = addr.replaceAll("[\\p{Cntrl}&&[^\r\n\t]]", "").trim();
 		for(String s:conns.keySet()) {
-			System.out.println(s+" - "+addr+"  -  Lengths: "+s.length()+" : "+addr.length());
-			if(s.equalsIgnoreCase(addr)) return conns.get(s);
+			System.out.println(s+" - "+ad+"  -  Lengths: "+s.length()+" : "+ad.length());
+			if(s.equalsIgnoreCase(ad)) return conns.get(s);
 		}
 		System.out.println("Returning null");
 		return null;
