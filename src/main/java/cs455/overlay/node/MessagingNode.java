@@ -248,7 +248,7 @@ public class MessagingNode implements Node{
 			String path = router.getRandomPathToNode();
 			String[] links = path.split("-");
 			System.out.println(Arrays.toString(links));
-			TCPConnection con = conns.get(links[1]);
+			TCPConnection con = findConnection(links[1]);
 			for(int j = 0; j < 5; j++) {
 				int num = rand.nextInt();
 				try {
