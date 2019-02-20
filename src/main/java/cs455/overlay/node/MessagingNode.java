@@ -154,7 +154,7 @@ public class MessagingNode implements Node{
 				// target address
 			}else {
 				System.out.println("Triggered relay statement");
-				conns.get(links[index+1]).sendData(m.getBytes());
+				findConnection(links[index+1]).sendData(m.getBytes());
 				incrementNumberRelayed();
 				//relay message
 			}
@@ -174,7 +174,7 @@ public class MessagingNode implements Node{
 			System.out.println("Error should not be recieving messages of this type");
 		}
 	}
-	
+	// tester method
 	private TCPConnection findConnection(String addr) {
 		for(String s:conns.keySet()) {
 			System.out.println(s+" - "+addr+"  -  Lengths: "+s.length()+" : "+addr.length());
@@ -248,7 +248,7 @@ public class MessagingNode implements Node{
 			String path = router.getRandomPathToNode();
 			String[] links = path.split("-");
 			System.out.println(Arrays.toString(links));
-			TCPConnection con = findConnection(links[1]);
+			TCPConnection con = conns.get(links[1]);
 			for(int j = 0; j < 5; j++) {
 				int num = rand.nextInt();
 				try {
