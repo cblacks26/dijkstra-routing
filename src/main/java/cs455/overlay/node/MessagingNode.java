@@ -43,7 +43,8 @@ public class MessagingNode implements Node{
 		this.conns = new HashMap<String,TCPConnection>();
 		this.listener = null;
 		this.router = null;
-		this.registry = createSocket(this,host,port);
+		TCPConnection con = createSocket(this,host,port);
+		this.registry = (con.getIPAddress()+":"+con.getListeningPort()).replaceAll("[\\p{Cntrl}&&[^\r\n\t]]", "").trim();
 		try {
 			this.listener = new ServerSocketListener(this);
 			Thread thread = new Thread(listener);
@@ -81,11 +82,9 @@ public class MessagingNode implements Node{
 		input.close();
 	}
 	
-	private String createSocket(Node node, String host, int port) {
+	private TCPConnection createSocket(Node node, String host, int port) {
 		TCPConnection conn = new TCPConnection(node, host, port);
-		String addr = (conn.getIPAddress()+":"+conn.getListeningPort()).replaceAll("[\\p{Cntrl}&&[^\r\n\t]]", "").trim();
-		conns.put(addr, conn);
-		return addr;
+		return conn;
 	}
 	
 	private void deregister() {
@@ -121,7 +120,8 @@ public class MessagingNode implements Node{
 			MessagingNodesList mnl = (MessagingNodesList)e;
 			for(String node:mnl.getNodes()) {
 				String[] info = node.split(":");
-				createSocket(this,info[0],Integer.parseInt(info[1]));
+				String addr = node.replaceAll("[\\p{Cntrl}&&[^\r\n\t]]", "").trim();
+				conns.put(addr, createSocket(this,info[0],Integer.parseInt(info[1])));
 			}
 			System.out.println("All connections are established. Number of connections: "+mnl.getNumberOfNodes());
 			System.out.println("Listening on port "+port);
