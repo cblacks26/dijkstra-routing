@@ -36,7 +36,7 @@ public class EventFactory{
 			event = new DeregisterResponse(bytes);
 		}else {
 			System.out.println("Recieved message of type "+type);
-			throw new Exception("Unrecognized Message Type");
+			throw new Exception("Unrecognized Message Type "+type);
 		}
 		dis.close();
 		bais.close();
