@@ -45,7 +45,6 @@ public class MessagingNode implements Node{
 		this.router = null;
 		TCPConnection con = createSocket(this,host,port);
 		this.registry = (con.getIPAddress()+":"+con.getListeningPort()).replaceAll("[\\p{Cntrl}&&[^\r\n\t]]", "").trim();
-		addConnection(con.getIPAddress(), con.getListeningPort(), con);
 		try {
 			this.listener = new ServerSocketListener(this);
 			Thread thread = new Thread(listener);
@@ -53,6 +52,7 @@ public class MessagingNode implements Node{
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 		}
+		addConnection(con.getIPAddress(), con.getListeningPort(), con);
 	}
 	
 	public static void main(String args[]) throws IOException{
