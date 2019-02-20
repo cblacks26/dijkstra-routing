@@ -35,6 +35,7 @@ public class EventFactory{
 		}else if(type == 11){
 			event = new DeregisterResponse(bytes);
 		}else {
+			System.out.println("Recieved message of type "+type);
 			throw new Exception("Unrecognized Message Type");
 		}
 		dis.close();
