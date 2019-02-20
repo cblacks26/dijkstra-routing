@@ -45,6 +45,7 @@ public class MessagingNode implements Node{
 		this.router = null;
 		TCPConnection con = createSocket(this,host,port);
 		this.registry = (con.getIPAddress()+":"+con.getListeningPort()).replaceAll("[\\p{Cntrl}&&[^\r\n\t]]", "").trim();
+		conns.put(registry, con);
 		try {
 			this.listener = new ServerSocketListener(this);
 			Thread thread = new Thread(listener);
