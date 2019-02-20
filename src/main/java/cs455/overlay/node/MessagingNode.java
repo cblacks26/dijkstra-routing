@@ -2,6 +2,7 @@ package cs455.overlay.node;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Random;
 import java.util.Scanner;
@@ -130,10 +131,11 @@ public class MessagingNode implements Node{
 		} else if(e.getType() == 6) {
 			System.out.println("Recieved TaskInitiate");
 			TaskInitiate ti = (TaskInitiate)e;
+			System.out.println("about to send rounds");
 			sendMessages(ti.getNumberOfRounds());
-			System.out.println("Passed send Messages");
 			// start sending messages
 		}else if(e.getType() == 8) {
+			System.out.println("Recieved pull task summary");
 			PullTaskSummary pts = (PullTaskSummary)e;
 			conns.get(registry).sendData(TaskSummary.createMessage(address, port, getAndResetNumberSent(), getAndResetSumSent(), 
 					getAndResetNumberRecieved(), getAndResetSumRecieved(), getAndResetNumberRelayed()));
@@ -143,15 +145,17 @@ public class MessagingNode implements Node{
 			incrementNumberRecieved();
 			String[] links = m.getPath().split("-");
 			int index = findNodeIndex(links);
-			if(index==links.length) {
+			System.out.println("Found index "+index+" of "+links.length);
+			if(index==links.length-1) {
+				System.out.println("Triggered reception statement");
 				addSumRecieved(m.getNumber());
 				// target address
 			}else {
+				System.out.println("Triggered relay statement");
 				conns.get(links[index+1]).sendData(m.getBytes());
 				incrementNumberRelayed();
 				//relay message
 			}
-			// if relay route detected check if needs to be sent
 		}else if(e.getType() == 11) {
 			DeregisterResponse dr = (DeregisterResponse)e;
 			if(dr.getResult()==1) {
@@ -168,10 +172,20 @@ public class MessagingNode implements Node{
 			System.out.println("Error should not be recieving messages of this type");
 		}
 	}
+	
+	private TCPConnection findConnection(String addr) {
+		for(String s:conns.keySet()) {
+			System.out.println(s+" - "+addr+"  -  Lengths: "+s.length()+" : "+addr.length());
+			if(s.equalsIgnoreCase(addr)) return conns.get(s);
+		}
+		System.out.println("Returning null");
+		return null;
+	}
 
 	private int findNodeIndex(String[] links) {
 		for(int i = 0;i<links.length;i++) {
-			if(node.equalsIgnoreCase(links[i]))return i;
+			String adr = links[i].replaceAll("[\\p{Cntrl}&&[^\r\n\t]]", "").trim();
+			if(node.equalsIgnoreCase(adr))return i;
 		}
 		return -1;
 	}
@@ -196,7 +210,7 @@ public class MessagingNode implements Node{
 		return temp;
 	}
 	
-	private void incrementNumberRelayed() {
+	private synchronized void incrementNumberRelayed() {
 		this.numRelay++;
 	}
 	
@@ -206,7 +220,7 @@ public class MessagingNode implements Node{
 		return temp;
 	}
 	
-	private void incrementNumberRecieved() {
+	private synchronized void incrementNumberRecieved() {
 		this.numRec++;
 	}
 	
@@ -216,7 +230,7 @@ public class MessagingNode implements Node{
 		return temp;
 	}
 	
-	private void setNumberSent(int sent) {
+	private synchronized void setNumberSent(int sent) {
 		this.numSent = sent;
 	}
 	
@@ -227,13 +241,23 @@ public class MessagingNode implements Node{
 	}
 	
 	private void sendMessages(int numberRounds) {
-		TCPConnection conn = null;
 		Random rand = new Random();
 		for(int i = 0; i < numberRounds;i++) {
-			int num = rand.nextInt();
-			
-			addSumSent(num);
+			String path = router.getRandomPathToNode();
+			String[] links = path.split("-");
+			System.out.println(Arrays.toString(links));
+			TCPConnection con = findConnection(links[1]);
+			for(int j = 0; j < 5; j++) {
+				int num = rand.nextInt();
+				try {
+					con.sendData(Message.createMessage(path, num));
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				addSumSent(num);
+			}
 		}
+		System.out.println("sent messages");
 		setNumberSent(numberRounds);
 		try {
 			conns.get(registry).sendData(TaskComplete.createMessage(address, port));
@@ -244,7 +268,8 @@ public class MessagingNode implements Node{
 	
 	@Override
 	public void onConnection(TCPConnection connection) {
-		conns.put(connection.getIPAddress()+":"+connection.getListeningPort(),connection);
+		String addr = (connection.getIPAddress()+":"+connection.getListeningPort()).replaceAll("[\\p{Cntrl}&&[^\r\n\t]]", "").trim();
+		conns.put(addr,connection);
 	}
 
 	@Override

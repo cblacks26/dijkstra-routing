@@ -29,6 +29,7 @@ public class Registry implements Node{
 	private static final Registry mainRegistry = null;
 	private ArrayList<OverlayNode> nodes;
 	private ArrayList<TaskSummary> summaries;
+	private int tasksCompleted = 0;
 	private int port;
 	private String address;
 	private Overlay overlay = null;
@@ -193,16 +194,25 @@ public class Registry implements Node{
 			}
 		}else if(e.getType()==7) {
 			TaskComplete tc = (TaskComplete)e;
-			try {
-				TimeUnit.SECONDS.sleep(15);
-			} catch (InterruptedException e1) {
-				e1.printStackTrace();
-			};
-			// wait for 15 seconds
-			byte[] message = PullTaskSummary.createMessage();
-			connection.sendData(message);
+			tasksCompleted++;
+			System.out.println("Recieved task Complete");
+			if(tasksCompleted==nodes.size()) {
+				try {
+					// wait for 15 seconds
+					TimeUnit.SECONDS.sleep(15);
+				} catch (InterruptedException e1) {
+					e1.printStackTrace();
+				};
+				System.out.println("sent pull task summary");
+				byte[] message = PullTaskSummary.createMessage();
+				for(OverlayNode n:nodes) {
+					n.getConnection().sendData(message);
+				}
+			}
+			
 		}else if(e.getType()==9) {
 			TaskSummary ts = (TaskSummary)e;
+			System.out.println("Recieved task summary from "+ts.getIpAddress());
 			summaries.add(ts);
 			if(summaries.size()==nodes.size()) {
 				printSummary();

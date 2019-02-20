@@ -37,6 +37,7 @@ public class TCPRecieverThread implements Runnable{
 				break;
 			} catch (Exception e) {
 				System.out.println("Error in Reciever Thread: "+e.getMessage());
+				e.printStackTrace();
 			}
 		}
 	}

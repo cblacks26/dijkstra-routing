@@ -2,11 +2,14 @@ package cs455.overlay.util;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Random;
 import java.util.Set;
 
 public class Router {
 
 	private HashMap<String,RouterNode> nodes;
+	private String[] addresses;
 	private Graph graph;
 	private String address;
 	
@@ -44,6 +47,13 @@ public class Router {
 		for(RouterNode n:result) {
 			nodes.replace(n.getNodeAddress(), n);
 		}
+		Iterator<String> it = nodes.keySet().iterator();
+		this.addresses = new String[nodes.size()];
+		int index = 0;
+		while(it.hasNext()) {
+			addresses[index] = it.next();
+			index++;
+		}
 	}
 
 	public static void main(String[] args) {
@@ -75,6 +85,30 @@ public class Router {
 		}
 	}
 	
+	private String getPathToNode(String addr) {
+		String a = addr.replaceAll("[\\p{Cntrl}&&[^\r\n\t]]", "").trim();
+		RouterNode n = nodes.get(addr);
+		String[] p = n.toString().split("--");
+		String result = "";
+		for(int i = 0;i<p.length;i++) {
+			if(i%2==0) result+=p[i];
+			else if(i%2==1) result+="-";
+		}
+		return result;
+	}
+	
+	public String getRandomPathToNode() {
+		Random rand = new Random();
+		int index = rand.nextInt(addresses.length-1);
+		if(addresses[index].equalsIgnoreCase(address)) {
+			if(index<addresses.length-1) {
+				index++;
+			}else {
+				index--;
+			}
+		}
+		return getPathToNode(addresses[index]);
+	}
 	
 	public void printShortestPaths() {
 		for(RouterNode node:graph.getNodes()) {

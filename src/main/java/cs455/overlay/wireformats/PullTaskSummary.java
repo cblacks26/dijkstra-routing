@@ -9,6 +9,7 @@ public class PullTaskSummary extends Event{
 
 	public PullTaskSummary(byte[] data) throws IOException {
 		super(data);
+		close();
 	}
 
 	public static byte[] createMessage() throws IOException {
