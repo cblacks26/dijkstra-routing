@@ -106,8 +106,14 @@ public class MessagingNode implements Node{
 	
 	@Override
 	public void onEvent(Event e, TCPConnection conn) throws IOException {
-		// Register Response
-		if(e.getType()==2) {
+		if(e.getType()==1) {
+			Register regReq = (Register) e;
+			String addr = (regReq.getIPAddress()+":"+regReq.getNodePort()).replaceAll("[\\p{Cntrl}&&[^\r\n\t]]", "").trim();
+			if(!conns.containsKey(addr)) {
+				conns.put(addr, conn);
+				conn.sendData(RegisterResponse.createMessage("Connected and registered successfully",1));
+			}else conn.sendData(RegisterResponse.createMessage("Already connected",0));
+		}else if(e.getType()==2) {
 			RegisterResponse regRes = (RegisterResponse)e;
 			// SUCCESS
 			if(regRes.getResult()==1) {
@@ -123,6 +129,7 @@ public class MessagingNode implements Node{
 				String[] info = node.split(":");
 				String addr = node.replaceAll("[\\p{Cntrl}&&[^\r\n\t]]", "").trim();
 				conns.put(addr, createSocket(this,info[0],Integer.parseInt(info[1])));
+				conns.get(addr).sendData(Register.createMessage(address,port));
 			}
 			System.out.println("All connections are established. Number of connections: "+mnl.getNumberOfNodes());
 			System.out.println("Listening on port "+port);
@@ -267,23 +274,23 @@ public class MessagingNode implements Node{
 			e.printStackTrace();
 		}
 	}
-	
-	@Override
-	public void onConnection(TCPConnection connection) {
-		String addr = (connection.getIPAddress()+":"+connection.getListeningPort()).replaceAll("[\\p{Cntrl}&&[^\r\n\t]]", "").trim();
-		conns.put(addr,connection);
-	}
 
 	@Override
 	public void onListening(int port){
 		this.port = port;
 		this.address = listener.getAddress().replaceAll("[\\p{Cntrl}&&[^\r\n\t]]", "").trim();
-		this.node = (address+":"+port);
+		this.node = (address+":"+port).replaceAll("[\\p{Cntrl}&&[^\r\n\t]]", "").trim();
 		register();
 	}
 
 	@Override
 	public void errorListening(String message) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onConnection(TCPConnection connection) {
 		// TODO Auto-generated method stub
 		
 	}
