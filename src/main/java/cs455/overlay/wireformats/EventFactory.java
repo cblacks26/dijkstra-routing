@@ -28,7 +28,7 @@ public class EventFactory{
 		}else if(type == 7){
 			event = new TaskComplete(bytes);
 		}else if(type == 8){
-			event = new PullTaskSummary(null);
+			event = new PullTaskSummary(8);
 		}else if(type == 9){
 			event = new TaskSummary(bytes);
 		}else if(type == 10){
@@ -36,8 +36,7 @@ public class EventFactory{
 		}else if(type == 11){
 			event = new DeregisterResponse(bytes);
 		}else {
-			System.out.println("Recieved message of type "+type);
-			throw new Exception("Unrecognized Message Type "+type);
+			throw new Exception("Unrecognized Message Type ");
 		}
 		dis.close();
 		bais.close();

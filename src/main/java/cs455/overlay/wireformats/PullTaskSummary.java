@@ -7,8 +7,8 @@ import java.io.IOException;
 
 public class PullTaskSummary extends Event{
 
-	public PullTaskSummary(byte[] data) throws IOException {
-		super(data);
+	public PullTaskSummary(int type) throws IOException {
+		super(type);
 	}
 
 	public static byte[] createMessage() throws IOException {

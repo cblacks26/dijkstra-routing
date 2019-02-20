@@ -14,11 +14,14 @@ public abstract class Event {
 	
 	public Event(byte[] data) throws IOException {
 		this.data = data;
-		if(data!=null) {
-			this.bais = new ByteArrayInputStream(data);
-			this.dis = new DataInputStream(new BufferedInputStream(bais));
-			this.type = dis.readInt();
-		}
+		this.bais = new ByteArrayInputStream(data);
+		this.dis = new DataInputStream(new BufferedInputStream(bais));
+		this.type = dis.readInt();
+	}
+	
+	public Event(int type) {
+		this.data = null;
+		this.type = type;
 	}
 	
 	public byte[] getBytes() {
