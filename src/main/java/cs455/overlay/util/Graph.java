@@ -9,6 +9,10 @@ public class Graph {
 
 	Set<RouterNode> nodes = new HashSet<>();
 	
+	public void addNode(RouterNode n) {
+		nodes.add(n);
+	}
+	
 	public void setNodes(Set<RouterNode> nodes) {
 		this.nodes = nodes;
 	}
@@ -17,7 +21,7 @@ public class Graph {
 		return nodes;
 	}
 	
-	public static Graph calculateShortestPathToNode(Graph graph, RouterNode sourceNode) {
+	public Set<RouterNode> calculateShortestPathFromNode(RouterNode sourceNode) {
 		sourceNode.setDistance(0);
 		
 		Set<RouterNode> settledNodes = new HashSet<>();
@@ -36,8 +40,9 @@ public class Graph {
 	            }
 	        }
 	        settledNodes.add(currNode);
+	        unsettledNodes.remove(currNode);
 		}
-		return graph;
+		return settledNodes;
 	}
 	
 	
@@ -49,6 +54,7 @@ public class Graph {
 	        LinkedList<RouterNode> shortestPath = new LinkedList<>(sourceNode.getShortestPath());
 	        LinkedList<Integer> shortestWeights = new LinkedList<>(sourceNode.getShortestPathWeights());
 	        shortestPath.add(sourceNode);
+	        shortestWeights.add(weight);
 	        evalNode.setShortestPath(shortestPath, shortestWeights);
 	    }
 	}

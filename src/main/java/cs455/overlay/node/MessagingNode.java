@@ -125,7 +125,6 @@ public class MessagingNode implements Node{
 			System.out.println("Listening on port "+port);
 		}else if(e.getType() == 5) {
 			LinkWeights lw = (LinkWeights)e;
-			System.out.println("MessgingNode Listening on port "+port);
 			this.router = new Router(node,lw.getLinks());
 			System.out.println("Link weights are received and processed. Ready to send messages.");
 		} else if(e.getType() == 6) {

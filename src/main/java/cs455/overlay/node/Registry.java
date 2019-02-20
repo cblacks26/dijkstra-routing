@@ -223,7 +223,6 @@ public class Registry implements Node{
 			System.out.println("Error must have atleast "+numConns +" to setup the overlay");
 		}else {
 			this.overlay = new Overlay(nodes, numConns);
-			System.out.println(overlay.toString());
 			try {
 				sendLinkCommand();
 				System.out.println("Sent Link Command");
@@ -245,7 +244,6 @@ public class Registry implements Node{
 		}
 		for(OverlayNode node:messages.keySet()) {
 			String message = messages.get(node);
-			System.out.println(message);
 			message.trim();
 			int count = message.split(" ").length;
 			byte[] bytes = MessagingNodesList.createMessage(messages.get(node), count);

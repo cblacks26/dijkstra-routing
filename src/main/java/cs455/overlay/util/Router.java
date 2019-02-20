@@ -1,8 +1,7 @@
 package cs455.overlay.util;
 
 import java.util.HashMap;
-import java.util.List;
-import java.util.Random;
+import java.util.HashSet;
 import java.util.Set;
 
 public class Router {
@@ -13,7 +12,7 @@ public class Router {
 	
 	public Router(String addr, String[] links) {
 		this.nodes = new HashMap<String,RouterNode>();
-		this.address = address.replaceAll("[\\p{Cntrl}&&[^\r\n\t]]", "").trim();
+		this.address = addr.replaceAll("[\\p{Cntrl}&&[^\r\n\t]]", "").trim();
 		this.nodes.put(address, new RouterNode(address));
 		for(String link:links) {
 			String[] parts = link.split(",");
@@ -38,11 +37,44 @@ public class Router {
 			n2.addAdjecentNodes(n1, weight);
 		}
 		this.graph = new Graph();
-		this.graph.setNodes((Set<RouterNode>)nodes.values());
-		this.graph = Graph.calculateShortestPathToNode(graph, nodes.get(address));
-		
+		for(RouterNode n:nodes.values()) {
+			graph.addNode(n);
+		}
+		Set<RouterNode> result = graph.calculateShortestPathFromNode(nodes.get(address));
+		for(RouterNode n:result) {
+			nodes.replace(n.getNodeAddress(), n);
+		}
 	}
 
+	public static void main(String[] args) {
+		RouterNode n1 = new RouterNode("1");
+		RouterNode n2 = new RouterNode("2");
+		RouterNode n3 = new RouterNode("3");
+		
+		n1.addAdjecentNodes(n2, 4);
+		n1.addAdjecentNodes(n3, 8);
+		
+		n2.addAdjecentNodes(n1, 4);
+		n2.addAdjecentNodes(n3, 3);
+		
+		n3.addAdjecentNodes(n1, 8);
+		n3.addAdjecentNodes(n2, 3);
+		
+		Graph g = new Graph();
+		Set<RouterNode> s = new HashSet<RouterNode>();
+		s.add(n1);
+		s.add(n2);
+		s.add(n3);
+		for(RouterNode n:s) {
+			System.out.println();
+		}
+		g.setNodes(s);
+		Set<RouterNode> result = g.calculateShortestPathFromNode(n1);
+		for(RouterNode n: result) {
+			if(!n.equals(n1)) System.out.println(n.getNodeAddress()+": "+n);
+		}
+	}
+	
 	
 	public void printShortestPaths() {
 		for(RouterNode node:graph.getNodes()) {

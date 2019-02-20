@@ -39,12 +39,9 @@ public class RouterNode {
 	}
 	
 	public String toString() {
-		String result = "";
-		for(int i = 0; i<shortestPath.size()-1;i++) {
-			result+=shortestPath.get(i)+"--"+pathWeights.get(i)+"--";
-		}
-		result+=shortestPath.get(shortestPath.size()-1);
-		return result;
+		if(shortestPath.size()<=0) return getNodeAddress();
+		int size = shortestPath.size()-1;
+		return shortestPath.get(size)+"--"+pathWeights.get(size)+"--"+address;
 	}
 
 	public HashMap<RouterNode,Integer> getAdjacentNodes() {
