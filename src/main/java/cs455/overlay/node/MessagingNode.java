@@ -45,7 +45,7 @@ public class MessagingNode implements Node{
 		this.router = null;
 		TCPConnection con = createSocket(this,host,port);
 		this.registry = (con.getIPAddress()+":"+con.getListeningPort()).replaceAll("[\\p{Cntrl}&&[^\r\n\t]]", "").trim();
-		conns.put(registry, con);
+		addConnection(con.getIPAddress(), con.getListeningPort(), con);
 		try {
 			this.listener = new ServerSocketListener(this);
 			Thread thread = new Thread(listener);
@@ -110,7 +110,7 @@ public class MessagingNode implements Node{
 			Register regReq = (Register) e;
 			String addr = (regReq.getIPAddress()+":"+regReq.getNodePort()).replaceAll("[\\p{Cntrl}&&[^\r\n\t]]", "").trim();
 			if(!conns.containsKey(addr)) {
-				conns.put(addr, conn);
+				addConnection(regReq.getIPAddress(),regReq.getNodePort(), conn);
 				conn.sendData(RegisterResponse.createMessage("Connected and registered successfully",1));
 			}else conn.sendData(RegisterResponse.createMessage("Already connected",0));
 		}else if(e.getType()==2) {
@@ -128,7 +128,7 @@ public class MessagingNode implements Node{
 			for(String node:mnl.getNodes()) {
 				String[] info = node.split(":");
 				String addr = node.replaceAll("[\\p{Cntrl}&&[^\r\n\t]]", "").trim();
-				conns.put(addr, createSocket(this,info[0],Integer.parseInt(info[1])));
+				addConnection(info[0],Integer.parseInt(info[1]),createSocket(this,info[0],Integer.parseInt(info[1])));
 				conns.get(addr).sendData(Register.createMessage(address,port));
 			}
 			System.out.println("All connections are established. Number of connections: "+mnl.getNumberOfNodes());
@@ -181,6 +181,13 @@ public class MessagingNode implements Node{
 			System.out.println("Error should not be recieving messages of this type");
 		}
 	}
+	
+	private void addConnection(String host, int port, TCPConnection con) {
+		String addr = (host+":"+port).replaceAll("[\\p{Cntrl}&&[^\r\n\t]]", "").trim();
+		System.out.println("Adding "+addr);
+		conns.put(addr, con);
+	}
+	
 	// tester method
 	private TCPConnection findConnection(String addr) {
 		for(String s:conns.keySet()) {
