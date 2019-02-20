@@ -41,10 +41,9 @@ public class MessagingNode implements Node{
 	
 	public MessagingNode(String host, int port) {
 		this.conns = new HashMap<String,TCPConnection>();
-		this.registry = host+":"+port;
 		this.listener = null;
 		this.router = null;
-		createSocket(this,host,port);
+		this.registry = createSocket(this,host,port);
 		try {
 			this.listener = new ServerSocketListener(this);
 			Thread thread = new Thread(listener);
@@ -82,10 +81,11 @@ public class MessagingNode implements Node{
 		input.close();
 	}
 	
-	private void createSocket(Node node, String host, int port) {
+	private String createSocket(Node node, String host, int port) {
 		TCPConnection conn = new TCPConnection(node, host, port);
 		String addr = (conn.getIPAddress()+":"+conn.getListeningPort()).replaceAll("[\\p{Cntrl}&&[^\r\n\t]]", "").trim();
 		conns.put(addr, conn);
+		return addr;
 	}
 	
 	private void deregister() {
