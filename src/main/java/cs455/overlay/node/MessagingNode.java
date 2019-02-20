@@ -155,13 +155,10 @@ public class MessagingNode implements Node{
 			incrementNumberRecieved();
 			String[] links = m.getPath().split("-");
 			int index = findNodeIndex(links);
-			System.out.println("Found index "+index+" of "+links.length);
 			if(index==links.length-1) {
-				System.out.println("Triggered reception statement");
 				addSumRecieved(m.getNumber());
 				// target address
 			}else {
-				System.out.println("Triggered relay statement");
 				findConnection(links[index+1]).sendData(m.getBytes());
 				incrementNumberRelayed();
 				//relay message
