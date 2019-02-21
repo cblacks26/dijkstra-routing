@@ -11,7 +11,6 @@ public class EventFactory{
 		ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
 		DataInputStream dis = new DataInputStream(new BufferedInputStream(bais));
 		int type = dis.readInt();
-		System.out.println("Recieved message of type "+type);
 		Event event = null;
 		if(type == 1) {
 			event = new Register(bytes);

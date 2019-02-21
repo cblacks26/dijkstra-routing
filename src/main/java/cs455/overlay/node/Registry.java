@@ -291,10 +291,21 @@ public class Registry implements Node{
 	}
 	
 	private void printSummary() {
-		System.out.println("Node\t | Number Messages Sent | Number Messages Recieved | Summation Sent Messgage | Summation Recieved Messages | Number Relayed Messages");
+		System.out.println("Node | Number Messages Sent | Number Messages Recieved | Summation Sent Messgage | Summation Recieved Messages | Number Relayed Messages");
+		long sumSent = 0;
+		long sumRec = 0;
+		long numSent = 0;
+		long numRec = 0;
+		long numRel = 0;
 		for(TaskSummary ts:summaries) {
+			sumSent+=ts.getSummationSentMessages();
+			sumRec+=ts.getSummationRecievedMessages();
+			numSent+=ts.getNumberSentMessages();
+			numRec+=ts.getNumberRecievedMessages();
+			numRel+=ts.getNumberRelayedMessages();
 			System.out.println(getSummary(ts));
 		}
+		System.out.println("Sum | "+numSent+" | "+numRec+" | "+sumSent+" | "+sumRec+" | "+numRel);
 	}
 	
 	private String getSummary(TaskSummary ts) {

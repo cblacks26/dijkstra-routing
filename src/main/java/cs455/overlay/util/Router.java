@@ -80,9 +80,7 @@ public class Router {
 		}
 		g.setNodes(s);
 		Set<RouterNode> result = g.calculateShortestPathFromNode(n1);
-		for(RouterNode n: result) {
-			if(!n.equals(n1)) System.out.println(n.getNodeAddress()+": "+n);
-		}
+		
 	}
 	
 	private String getPathToNode(String addr) {

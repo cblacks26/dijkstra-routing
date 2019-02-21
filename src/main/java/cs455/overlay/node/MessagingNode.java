@@ -130,10 +130,9 @@ public class MessagingNode implements Node{
 				String[] info = node.split(":");
 				String addr = node.replaceAll("[\\p{Cntrl}&&[^\r\n\t]]", "").trim();
 				addConnection(info[0],Integer.parseInt(info[1]),createSocket(this,info[0],Integer.parseInt(info[1])));
-				conns.get(addr).sendData(Register.createMessage(address,port));
+				findConnection(addr).sendData(Register.createMessage(address,port));
 			}
 			System.out.println("All connections are established. Number of connections: "+mnl.getNumberOfNodes());
-			System.out.println("Listening on port "+port);
 		}else if(e.getType() == 5) {
 			LinkWeights lw = (LinkWeights)e;
 			this.router = new Router(node,lw.getLinks());
@@ -146,10 +145,13 @@ public class MessagingNode implements Node{
 		}else if(e.getType() == 8) {
 			System.out.println("Recieved pull task summary");
 			PullTaskSummary pts = (PullTaskSummary)e;
-			conns.get(registry).sendData(TaskSummary.createMessage(address, port, getAndResetNumberSent(), getAndResetSumSent(), 
-					getAndResetNumberRecieved(), getAndResetSumRecieved(), getAndResetNumberRelayed()));
+			try {
+				findConnection(registry).sendData(TaskSummary.createMessage(address, port, getAndResetNumberSent(), getAndResetSumSent(), 
+						getAndResetNumberRecieved(), getAndResetSumRecieved(), getAndResetNumberRelayed()));
+			}catch(IOException ioe) {
+				System.out.println("Error send task summary"+ioe.getStackTrace());
+			}
 		}else if(e.getType() == 10) {
-			System.out.println("Recieved Message");
 			Message m = (Message)e;
 			incrementNumberRecieved();
 			String[] links = m.getPath().split("-");
@@ -255,9 +257,9 @@ public class MessagingNode implements Node{
 	private void sendMessages(int numberRounds) {
 		Random rand = new Random();
 		for(int i = 0; i < numberRounds;i++) {
+			int nums = 0;
 			String path = router.getRandomPathToNode();
 			String[] links = path.split("-");
-			System.out.println(Arrays.toString(links));
 			TCPConnection con = findConnection(links[1]);
 			for(int j = 0; j < 5; j++) {
 				int num = rand.nextInt();
@@ -266,11 +268,12 @@ public class MessagingNode implements Node{
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
-				addSumSent(num);
+				nums+=num;
 			}
+			addSumSent(nums);
 		}
 		System.out.println("sent messages");
-		setNumberSent(numberRounds);
+		setNumberSent(numberRounds*5);
 		try {
 			conns.get(registry).sendData(TaskComplete.createMessage(address, port));
 		} catch (IOException e) {
