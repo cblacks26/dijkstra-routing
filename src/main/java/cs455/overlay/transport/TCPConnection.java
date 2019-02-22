@@ -19,6 +19,8 @@ public class TCPConnection {
 		this.socket = socket;
 		listener = new TCPRecieverThread(this, socket);
 		sender = new TCPSender(socket);
+		Thread threadSender = new Thread(sender);
+		threadSender.start();
 		listenerThread = new Thread(listener);
 		listenerThread.start();
 		this.address = socket.getInetAddress().getHostAddress().replaceAll("[\\p{Cntrl}&&[^\r\n\t]]", "").trim();
@@ -46,8 +48,8 @@ public class TCPConnection {
 		return socket.getPort();
 	}
 	
-	public void sendData(byte[] data) {
-		sender.sendData(data);
+	public TCPSender getSender() {
+		return sender;
 	}
 	
 	public String getIPAddress() {

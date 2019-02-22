@@ -91,7 +91,7 @@ public class MessagingNode implements Node{
 	
 	private void deregister() {
 		try {
-			conns.get(registry).sendData(Deregister.createMessage(address, port));
+			conns.get(registry).getSender().sendData(Deregister.createMessage(address, port));
 		}catch(IOException ioe) {
 			System.out.println("Error sending deregister message to registry: "+ioe.getMessage());
 		}
@@ -99,7 +99,7 @@ public class MessagingNode implements Node{
 	
 	private void register(){
 		try {
-			conns.get(registry).sendData(Register.createMessage(address, port));
+			conns.get(registry).getSender().sendData(Register.createMessage(address, port));
 		}catch(IOException ioe) {
 			System.out.println("Error sending register message to registry: "+ioe.getMessage());
 		}
@@ -112,8 +112,8 @@ public class MessagingNode implements Node{
 			String addr = (regReq.getIPAddress()+":"+regReq.getNodePort()).replaceAll("[\\p{Cntrl}&&[^\r\n\t]]", "").trim();
 			if(!conns.containsKey(addr)) {
 				addConnection(regReq.getIPAddress(),regReq.getNodePort(), conn);
-				conn.sendData(RegisterResponse.createMessage("Connected and registered successfully",1));
-			}else conn.sendData(RegisterResponse.createMessage("Already connected",0));
+				conn.getSender().sendData(RegisterResponse.createMessage("Connected and registered successfully",1));
+			}else conn.getSender().sendData(RegisterResponse.createMessage("Already connected",0));
 		}else if(e.getType()==2) {
 			RegisterResponse regRes = (RegisterResponse)e;
 			// SUCCESS
@@ -130,7 +130,7 @@ public class MessagingNode implements Node{
 				String[] info = node.split(":");
 				String addr = node.replaceAll("[\\p{Cntrl}&&[^\r\n\t]]", "").trim();
 				addConnection(info[0],Integer.parseInt(info[1]),createSocket(this,info[0],Integer.parseInt(info[1])));
-				findConnection(addr).sendData(Register.createMessage(address,port));
+				findConnection(addr).getSender().sendData(Register.createMessage(address,port));
 			}
 			System.out.println("All connections are established. Number of connections: "+mnl.getNumberOfNodes());
 		}else if(e.getType() == 5) {
@@ -146,7 +146,7 @@ public class MessagingNode implements Node{
 			System.out.println("Recieved pull task summary");
 			PullTaskSummary pts = (PullTaskSummary)e;
 			try {
-				findConnection(registry).sendData(TaskSummary.createMessage(address, port, getAndResetNumberSent(), getAndResetSumSent(), 
+				findConnection(registry).getSender().sendData(TaskSummary.createMessage(address, port, getAndResetNumberSent(), getAndResetSumSent(), 
 						getAndResetNumberRecieved(), getAndResetSumRecieved(), getAndResetNumberRelayed()));
 			}catch(IOException ioe) {
 				System.out.println("Error send task summary"+ioe.getStackTrace());
@@ -160,7 +160,7 @@ public class MessagingNode implements Node{
 				addSumRecieved(m.getNumber());
 				// target address
 			}else {
-				findConnection(links[index+1]).sendData(m.getBytes());
+				findConnection(links[index+1]).getSender().sendData(m.getBytes());
 				incrementNumberRelayed();
 				//relay message
 			}
@@ -204,21 +204,21 @@ public class MessagingNode implements Node{
 		return -1;
 	}
 	
-	private void addSumSent(int sum) {
+	private synchronized void addSumSent(long sum) {
 		this.sumSent+=sum;
 	}
 	
-	private long getAndResetSumSent() {
+	private synchronized long getAndResetSumSent() {
 		long temp = sumSent;
 		this.sumSent = 0;
 		return temp;
 	}
 	
-	private void addSumRecieved(int sum) {
+	private synchronized void addSumRecieved(int sum) {
 		this.sumRec+=sum;
 	}
 	
-	private long getAndResetSumRecieved() {
+	private synchronized long getAndResetSumRecieved() {
 		long temp = sumRec;
 		this.sumRec = 0;
 		return temp;
@@ -228,7 +228,7 @@ public class MessagingNode implements Node{
 		this.numRelay++;
 	}
 	
-	private int getAndResetNumberRelayed() {
+	private synchronized int getAndResetNumberRelayed() {
 		int temp = this.numRelay;
 		this.numRelay = 0;
 		return temp;
@@ -238,7 +238,7 @@ public class MessagingNode implements Node{
 		this.numRec++;
 	}
 	
-	private int getAndResetNumberRecieved() {
+	private synchronized int getAndResetNumberRecieved() {
 		int temp = numRec;
 		this.numRec = 0;
 		return temp;
@@ -248,7 +248,7 @@ public class MessagingNode implements Node{
 		this.numSent = sent;
 	}
 	
-	private int getAndResetNumberSent() {
+	private synchronized int getAndResetNumberSent() {
 		int temp = numSent;
 		this.numSent = 0;
 		return temp;
@@ -257,14 +257,14 @@ public class MessagingNode implements Node{
 	private void sendMessages(int numberRounds) {
 		Random rand = new Random();
 		for(int i = 0; i < numberRounds;i++) {
-			int nums = 0;
+			long nums = 0;
 			String path = router.getRandomPathToNode();
 			String[] links = path.split("-");
 			TCPConnection con = findConnection(links[1]);
 			for(int j = 0; j < 5; j++) {
 				int num = rand.nextInt();
 				try {
-					con.sendData(Message.createMessage(path, num));
+					con.getSender().sendData(Message.createMessage(path, num));
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -275,7 +275,7 @@ public class MessagingNode implements Node{
 		System.out.println("sent messages");
 		setNumberSent(numberRounds*5);
 		try {
-			conns.get(registry).sendData(TaskComplete.createMessage(address, port));
+			conns.get(registry).getSender().sendData(TaskComplete.createMessage(address, port));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

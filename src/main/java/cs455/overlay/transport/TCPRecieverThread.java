@@ -31,10 +31,10 @@ public class TCPRecieverThread implements Runnable{
 				conn.getParentNode().onEvent(event,conn);
 			} catch(SocketException se) {
 				System.out.println("SError in Reciever Thread: "+se.getMessage());
-				break;
-			} catch(IOException e) {
-				System.out.println("IOError in Reciever Thread: "+e.getMessage());
-				break;
+				se.printStackTrace();
+			} catch(IOException ioe) {
+				System.out.println("IOError in Reciever Thread: "+ioe.getMessage());
+				ioe.printStackTrace();
 			} catch (Exception e) {
 				System.out.println("Error in Reciever Thread: "+e.getMessage());
 				e.printStackTrace();

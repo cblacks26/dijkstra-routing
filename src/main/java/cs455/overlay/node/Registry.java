@@ -125,7 +125,7 @@ public class Registry implements Node{
 	}
 	
 	public void registerResponse(int result, String info, TCPConnection conn) throws IOException {
-		conn.sendData(RegisterResponse.createMessage(info, result));
+		conn.getSender().sendData(RegisterResponse.createMessage(info, result));
 	}
 	
 	public void onListening(int port) {
@@ -185,12 +185,12 @@ public class Registry implements Node{
 				OverlayNode on = new OverlayNode(de.getIPAddress(),de.getNodePort(),connection);
 				boolean result = findAndRemove(on);
 				if(result) {
-					connection.sendData(DeregisterResponse.createMessage("Removed from overlay", 1));
+					connection.getSender().sendData(DeregisterResponse.createMessage("Removed from overlay", 1));
 				}else {
-					connection.sendData(DeregisterResponse.createMessage("Node not found in overlay", 0));
+					connection.getSender().sendData(DeregisterResponse.createMessage("Node not found in overlay", 0));
 				}
 			}else {
-				connection.sendData(DeregisterResponse.createMessage("Address does not match connection", 0));
+				connection.getSender().sendData(DeregisterResponse.createMessage("Address does not match connection", 0));
 			}
 		}else if(e.getType()==7) {
 			TaskComplete tc = (TaskComplete)e;
@@ -206,7 +206,7 @@ public class Registry implements Node{
 				System.out.println("sent pull task summary");
 				byte[] message = PullTaskSummary.createMessage();
 				for(OverlayNode n:nodes) {
-					n.getConnection().sendData(message);
+					n.getConnection().getSender().sendData(message);
 				}
 			}
 			
@@ -257,7 +257,7 @@ public class Registry implements Node{
 			message.trim();
 			int count = message.split(" ").length;
 			byte[] bytes = MessagingNodesList.createMessage(messages.get(node), count);
-			node.getConnection().sendData(bytes);
+			node.getConnection().getSender().sendData(bytes);
 		}
 	}
 	
@@ -270,7 +270,7 @@ public class Registry implements Node{
 		try {
 			byte[] bytes = LinkWeights.createMessage(links, overlay.getLinks().size());
 			for(OverlayNode node:nodes) {
-				node.getConnection().sendData(bytes);
+				node.getConnection().getSender().sendData(bytes);
 			}
 		}catch(IOException ioe) {
 			System.out.println("Error sending messaging Nodes List: "+ioe.getMessage());
@@ -286,7 +286,7 @@ public class Registry implements Node{
 		}
 		
 		for(OverlayNode on:nodes) {
-			on.getConnection().sendData(data);
+			on.getConnection().getSender().sendData(data);
 		}
 	}
 	
